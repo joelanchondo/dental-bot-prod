@@ -10,10 +10,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// DEBUG: Ver variables de entorno
+console.log('🔧 Environment Variables:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
+console.log('MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 'undefined');
+
 // Conectar MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/dental-bot')
-  .then(() => console.log('✅ MongoDB conectado'))
-  .catch(err => console.error('❌ Error MongoDB:', err));
+const connectDB = async () => {
+  try {
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/dental-bot';
+    console.log('🔗 Conectando a MongoDB...');
+    
+    await mongoose.connect(mongoURI);
+    console.log('✅ MongoDB conectado exitosamente');
+  } catch (error) {
+    console.error('❌ Error conectando a MongoDB:', error.message);
+    console.log('💡 URI usada:', process.env.MONGODB_URI ? 'Presente' : 'No encontrada');
+    process.exit(1);
+  }
+};
+
+connectDB();
 
 // Rutas
 const webhookRoutes = require('./routes/webhook');
@@ -22,12 +40,13 @@ const adminRoutes = require('./routes/admin');
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check - RUTA CORREGIDA
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
     message: 'Bot Dental API funcionando',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });
 });
@@ -46,4 +65,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📍 URL: http://localhost:${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
