@@ -1,31 +1,9 @@
-# Environment variables
+node_modules/
 .env
 .env.local
 .env.production
-
-# Backup files
-*.backup
-*.bak
-
-# Logs
 *.log
-npm-debug.log*
-
-# Runtime data
-pids
-*.pid
-*.seed
-
-# Dependency directories
-node_modules/
-
-# Optional npm cache directory
-.npm
-
-# Optional REPL history
-.node_repl_history
-
-# Twilio credential files (no subir)
+*.backup
 *Credentials.js
 *Twilio*.js
 *fixBusiness.js
