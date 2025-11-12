@@ -14,16 +14,22 @@ router.post('/whatsapp', async (req, res) => {
     
     console.log('🤖 RESPUESTA GENERADA - ENVIANDO...');
     
-    // ENVIAR LA RESPUESTA CON TWILIO - CORREGIDO
-    const client = twilio(
-      business.whatsapp.twilioSid, 
-      business.whatsapp.twilioToken
-    );
+    // USAR CREDENCIALES DE VARIABLES DE ENTORNO
+    const accountSid = process.env.TWILIO_ACCOUNT_SID || business.whatsapp.twilioSid;
+    const authToken = process.env.TWILIO_AUTH_TOKEN || business.whatsapp.twilioToken;
+    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || business.whatsapp.number;
+    
+    console.log('🔐 Twilio Config:');
+    console.log('SID:', accountSid ? 'PRESENTE' : 'FALTANTE');
+    console.log('Token:', authToken ? 'PRESENTE' : 'FALTANTE');
+    console.log('From:', fromNumber);
+    
+    const client = twilio(accountSid, authToken);
     
     await client.messages.create({
       body: response,
-      from: `whatsapp:${business.whatsapp.number}`,  // AGREGAR 'whatsapp:'
-      to: From  // Ya incluye 'whatsapp:'
+      from: `whatsapp:${fromNumber}`,
+      to: From
     });
     
     console.log('✅ RESPUESTA ENVIADA A WHATSAPP');
@@ -31,6 +37,7 @@ router.post('/whatsapp', async (req, res) => {
     res.status(200).send('OK');
   } catch (error) {
     console.error('❌ ERROR:', error.message);
+    console.error('🔍 Error details:', error.code, error.moreInfo);
     res.status(200).send('OK');
   }
 });
