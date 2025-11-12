@@ -22,20 +22,27 @@ const adminRoutes = require('./routes/admin');
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Health check
+// Health check - RUTA CORREGIDA
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Bot Dental API funcionando',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Ruta principal
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'Bot Dental API - Sistema funcionando',
-    timestamp: new Date(),
-    version: '1.0.0'
+    version: '1.0.0',
+    timestamp: new Date()
   });
 });
 
-// Iniciar cron jobs (comentado por ahora)
-// require('./jobs/appointmentChecker');
-
-const PORT = process.env.PORT || 3001;  // CAMBIADO A 3001
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
   console.log(`📍 URL: http://localhost:${PORT}`);
