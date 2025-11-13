@@ -49,6 +49,11 @@ async function getSmartResponse(business, msg, phone, state) {
 
   console.log(`🔍 Estado: ${state.currentStep}, Cita existente: ${!!existingAppointment}`);
 
+  // Si tiene cita y escribe opciones de cancelación
+  if (existingAppointment && (msg.includes('cancelar') || msg.includes('reagendar') || msg === '1' || msg === '2')) {
+    return handleExistingAppointmentOptions(business, msg, phone, state, existingAppointment);
+  }
+
   // Flujo de agendar cita
   if (state.currentFlow === 'appointment') {
     return handleAppointmentFlow(business, msg, phone, state);
@@ -62,7 +67,7 @@ async function getSmartResponse(business, msg, phone, state) {
 
   if (msg.includes('agendar') || msg.includes('cita') || msg === '1') {
     if (existingAppointment) {
-      return `📅 *Ya tienes una cita programada*\n\n${formatAppointment(existingAppointment)}\n\n¿Quieres cancelarla para agendar una nueva?`;
+      return `📅 *Ya tienes una cita programada*\n\n${formatAppointment(existingAppointment)}\n\n*¿Qué quieres hacer?*\n\n1️⃣ *Cancelar* - Cancelar esta cita\n2️⃣ *Reagendar* - Cambiar fecha/hora\n3️⃣ *Menú* - Volver al menú\n\n*Escribe el número de tu opción:*`;
     }
     state.currentFlow = 'appointment';
     state.currentStep = 'service';
@@ -85,10 +90,6 @@ async function getSmartResponse(business, msg, phone, state) {
     return getLocationMenu(business);
   }
 
-  if (msg.includes('cancelar')) {
-    return handleCancellation(existingAppointment, phone);
-  }
-
   if (msg === 'menu') {
     ConversationManager.clearUserState(phone);
     return getMainMenu(business, existingAppointment);
@@ -96,6 +97,36 @@ async function getSmartResponse(business, msg, phone, state) {
 
   // Si no entiende, mostrar menú principal
   return getMainMenu(business, existingAppointment);
+}
+
+// NUEVA FUNCIÓN: Manejar opciones de cita existente
+async function handleExistingAppointmentOptions(business, msg, phone, state, existingAppointment) {
+  // Solo números para opciones
+  if (msg === '1' || msg.includes('cancelar')) {
+    // Cancelar cita existente
+    existingAppointment.status = 'cancelled';
+    await existingAppointment.save();
+    ConversationManager.clearUserState(phone);
+    
+    return `✅ *Cita Cancelada Exitosamente*\n\nTu cita del ${existingAppointment.datetime.toLocaleDateString('es-MX')} ha sido cancelada.\n\n¿Quieres agendar una nueva cita? Escribe "1"`;
+  }
+
+  if (msg === '2' || msg.includes('reagendar')) {
+    // Cancelar cita existente y empezar nueva
+    existingAppointment.status = 'cancelled';
+    await existingAppointment.save();
+    
+    state.currentFlow = 'appointment';
+    state.currentStep = 'service';
+    return `🔄 *Cita anterior cancelada*\n\nAhora vamos a agendar tu nueva cita:\n\n${getServiceMenu(business)}`;
+  }
+
+  if (msg === '3' || msg.includes('menu')) {
+    ConversationManager.clearUserState(phone);
+    return getMainMenu(business);
+  }
+
+  return `📅 *Ya tienes una cita programada*\n\n${formatAppointment(existingAppointment)}\n\n*¿Qué quieres hacer?*\n\n1️⃣ *Cancelar* - Cancelar esta cita\n2️⃣ *Reagendar* - Cambiar fecha/hora\n3️⃣ *Menú* - Volver al menú\n\n*Escribe el número de tu opción:*`;
 }
 
 async function handleAppointmentFlow(business, msg, phone, state) {
@@ -265,6 +296,171 @@ Disculpa las molestias.`;
   }
 }
 
-// ... (el resto de las funciones se mantienen igual)
-// [MANTENER TODAS LAS FUNCIONES getWelcomeMenu, getMainMenu, etc. SIN CAMBIOS]
+function getWelcomeMenu(business, existingAppointment = null) {
+  let message = `👋 *¡Bienvenido a ${business.name}!* 🦷
 
+*Tu sonrisa es nuestra prioridad* ✨`;
+
+  if (existingAppointment) {
+    message += `\n\n📋 *Tienes una cita programada* ✅`;
+  }
+
+  message += `\n\n*¿En qué puedo ayudarte hoy?*
+
+1️⃣ *AGENDAR CITA* - Nueva consulta
+2️⃣ *MIS CITAS* - Ver/Consultar
+3️⃣ *SERVICIOS* - Tratamientos
+4️⃣ *HORARIOS* - Disponibilidad
+5️⃣ *UBICACIÓN* - Dirección
+
+*Escribe el número de tu opción:*`;
+
+  return message;
+}
+
+function getMainMenu(business, existingAppointment = null) {
+  if (existingAppointment) {
+    return `📋 *Menú Principal*
+
+1️⃣ *AGENDAR* - Nueva cita
+2️⃣ *VER CITA* - ${formatAppointmentShort(existingAppointment)}
+3️⃣ *SERVICIOS* - Tratamientos
+4️⃣ *HORARIOS* - Disponibilidad
+5️⃣ *UBICACIÓN* - Dirección
+
+*Escribe el número de tu opción:*`;
+  }
+
+  return getWelcomeMenu(business);
+}
+
+function getServiceMenu(business) {
+  return `🦷 *AGENDAR CITA* 📅
+
+*Selecciona el servicio que necesitas:*
+
+${getServicesList(business)}
+
+*Escribe el número o nombre del servicio:*`;
+}
+
+function getServicesList(business) {
+  return business.services.map((service, index) =>
+    `${index + 1}. ${service}`
+  ).join('\n');
+}
+
+function getServicesMenu(business) {
+  return `🦷 *NUESTROS SERVICIOS* ✨
+
+${business.services.map(service => `• ${service}`).join('\n')}
+
+💫 *Consulta de evaluación GRATIS*
+📋 *Plan de tratamiento personalizado*
+
+*¿Quieres agendar tu consulta?*
+Escribe "1" o "AGENDAR"`;
+}
+
+function getScheduleMenu(business) {
+  return `🕐 *HORARIOS DE ATENCIÓN* ⏰
+
+Lunes a Viernes: ${business.schedule.weekdays}
+Sábados: ${business.schedule.saturday}
+Domingos: ${business.schedule.sunday}
+
+*¿Quieres agendar una cita?*
+Escribe "1" o "AGENDAR"`;
+}
+
+function getLocationMenu(business) {
+  return `📍 *NUESTRA UBICACIÓN* 🗺️
+
+${business.address}
+
+*¿Necesitas ayuda para llegar?*
+Escribe "1" para agendar cita o contáctanos:
+📞 ${business.phone}`;
+}
+
+function getAppointmentInfo(appointment) {
+  if (!appointment) {
+    return `❌ *No tienes citas programadas*
+
+¿Te gustaría agendar una?
+Escribe "1" o "AGENDAR"`;
+  }
+
+  return `📅 *TU CITA PROGRAMADA* ✅
+
+${formatAppointment(appointment)}
+
+*Opciones:*
+1️⃣ *CANCELAR* - Cancelar esta cita
+2️⃣ *REAGENDAR* - Cambiar fecha/hora
+3️⃣ *MENU* - Volver al menú
+
+*Escribe el número de tu opción:*`;
+}
+
+function formatAppointment(appointment) {
+  const fecha = appointment.datetime.toLocaleDateString('es-MX');
+  const hora = appointment.datetime.toLocaleTimeString('es-MX', {
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  return `🗓️ *Fecha:* ${fecha}
+⏰ *Hora:* ${hora}
+🦷 *Servicio:* ${appointment.service}
+👤 *Paciente:* ${appointment.patient.name}
+📊 *Estado:* ${appointment.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}`;
+}
+
+function formatAppointmentShort(appointment) {
+  const fecha = appointment.datetime.toLocaleDateString('es-MX');
+  return `${fecha} - ${appointment.service}`;
+}
+
+async function handleCancellation(appointment, phone) {
+  if (!appointment) {
+    return `❌ *No tienes citas activas para cancelar*
+
+¿Quieres agendar una nueva cita?
+Escribe "1" o "AGENDAR"`;
+  }
+
+  try {
+    appointment.status = 'cancelled';
+    await appointment.save();
+    ConversationManager.clearUserState(phone);
+
+    return `✅ *Cita Cancelada Exitosamente*
+
+Tu cita del ${appointment.datetime.toLocaleDateString('es-MX')} ha sido cancelada.
+
+¿Necesitas agendar una nueva cita?
+Escribe "1" o "AGENDAR"`;
+  } catch (error) {
+    return `❌ *Error al cancelar cita*
+
+Por favor contáctanos directamente para cancelar.`;
+  }
+}
+
+function isGreeting(msg) {
+  const greetings = ['hola', 'hi', 'hello', 'buenas', 'saludos', 'hey', 'ola'];
+  return greetings.some(greeting => msg.includes(greeting));
+}
+
+function getErrorMessage() {
+  return `❌ *¡Ups! Algo salió mal*
+
+No pude procesar tu mensaje. Por favor intenta de nuevo.
+
+*Escribe "MENU" para volver al inicio.*`;
+}
+
+module.exports = {
+  processBotMessage,
+  ConversationManager
+};
