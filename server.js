@@ -36,8 +36,10 @@ connectDB();
 // Rutas
 const webhookRoutes = require('./routes/webhook');
 const adminRoutes = require('./routes/admin');
+const onboardingRoutes = require('./routes/onboarding');
 
 app.use('/webhook', webhookRoutes);
+app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check
