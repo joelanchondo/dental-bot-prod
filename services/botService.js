@@ -1,6 +1,6 @@
 const Appointment = require('../models/Appointment');
 
-// Estado en memoria (en producción real usar Redis)
+// Estado en memoria
 const conversationStates = new Map();
 
 class ConversationManager {
@@ -33,12 +33,10 @@ async function processBotMessage(business, message, phone) {
   console.log(`🤖 [${phone}] Mensaje: "${message}" | Estado: ${state.step || 'inicial'}`);
 
   try {
-    // Plan Básico: respuestas simples
     if (business.plan === 'basico') {
       return getBasicResponse(business, msg);
     }
 
-    // Plan Profesional/Premium: flujo completo
     return await getSmartResponse(business, msg, phone, state);
   } catch (error) {
     console.error('❌ Error procesando mensaje:', error);
@@ -46,9 +44,6 @@ async function processBotMessage(business, message, phone) {
   }
 }
 
-// ============================================
-// RESPUESTAS PLAN BÁSICO
-// ============================================
 function getBasicResponse(business, msg) {
   if (msg.includes('horario') || msg === '4') {
     return `🕐 *Horario de Atención*\n\n` +
@@ -77,7 +72,6 @@ function getBasicResponse(business, msg) {
            `• Fecha y hora preferida`;
   }
 
-  // Menú principal
   return `👋 ¡Hola! Soy el asistente de *${business.name}*\n\n` +
          `¿En qué puedo ayudarte?\n\n` +
          `1️⃣ Agendar cita\n` +
@@ -88,11 +82,7 @@ function getBasicResponse(business, msg) {
          `Escribe el número de tu opción`;
 }
 
-// ============================================
-// RESPUESTAS PLAN PROFESIONAL/PREMIUM
-// ============================================
 async function getSmartResponse(business, msg, phone, state) {
-  // Buscar cita existente
   const existingAppointment = await Appointment.findOne({
     businessId: business._id,
     'patient.phone': phone,
@@ -100,33 +90,25 @@ async function getSmartResponse(business, msg, phone, state) {
     status: { $in: ['confirmada', 'pendiente'] }
   });
 
-  // SALUDOS - Mostrar menú principal
   if (isGreeting(msg)) {
     ConversationManager.clearState(phone);
     return getWelcomeMenu(business, existingAppointment);
   }
 
-  // MENÚ - Volver al inicio
   if (msg === 'menu' || msg === 'menú' || msg === '0') {
     ConversationManager.clearState(phone);
     return getMainMenu(business, existingAppointment);
   }
 
-  // Si está en flujo de agendado
   if (state.flow === 'appointment') {
     return handleAppointmentFlow(business, msg, phone, state);
   }
 
-  // Si tiene cita y está en flujo de gestión
   if (state.flow === 'manage_appointment') {
     return handleManageAppointment(business, msg, phone, state, existingAppointment);
   }
 
-  // ============================================
-  // OPCIONES DEL MENÚ PRINCIPAL
-  // ============================================
-
-  // 1. AGENDAR CITA
+  // OPCIONES DEL MENÚ
   if (msg === '1' || msg.includes('agendar')) {
     if (existingAppointment) {
       ConversationManager.updateState(phone, { 
@@ -150,7 +132,6 @@ async function getSmartResponse(business, msg, phone, state) {
     return getServiceSelectionMenu(business);
   }
 
-  // 2. CONSULTAR MI CITA
   if (msg === '2' || msg.includes('mi cita') || msg.includes('consultar')) {
     if (!existingAppointment) {
       return `❌ *No tienes citas programadas*\n\n` +
@@ -171,33 +152,25 @@ async function getSmartResponse(business, msg, phone, state) {
            `Escribe el número:`;
   }
 
-  // 3. SERVICIOS
   if (msg === '3' || msg.includes('servicio')) {
     return getServicesInfo(business);
   }
 
-  // 4. HORARIOS
   if (msg === '4' || msg.includes('horario')) {
     return getScheduleInfo(business);
   }
 
-  // 5. UBICACIÓN
   if (msg === '5' || msg.includes('ubicacion') || msg.includes('direccion')) {
     return getLocationInfo(business);
   }
 
-  // 6. EMERGENCIA (solo si lo mencionan)
   if (msg.includes('emergencia') || msg.includes('urgente')) {
     return getEmergencyInfo(business);
   }
 
-  // Default: Menú principal
   return getMainMenu(business, existingAppointment);
 }
 
-// ============================================
-// FLUJO DE AGENDADO
-// ============================================
 async function handleAppointmentFlow(business, msg, phone, state) {
   switch (state.step) {
     case 'select_service':
@@ -216,7 +189,6 @@ async function handleAppointmentFlow(business, msg, phone, state) {
 }
 
 function handleServiceSelection(business, msg, phone, state) {
-  // Por número
   const serviceIndex = parseInt(msg) - 1;
   if (serviceIndex >= 0 && serviceIndex < business.services.length) {
     const service = business.services[serviceIndex];
@@ -229,7 +201,6 @@ function handleServiceSelection(business, msg, phone, state) {
            `_(Ejemplo: María González López)_`;
   }
 
-  // Por texto
   const matchedService = business.services.find(s => 
     s.toLowerCase().includes(msg) || msg.includes(s.toLowerCase())
   );
@@ -258,7 +229,6 @@ function handleNameEntry(business, msg, phone, state) {
   state.data.name = capitalizeWords(msg);
   state.step = 'confirm_date';
 
-  // Fecha automática: mañana 10:00 AM
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(10, 0, 0, 0);
@@ -284,7 +254,6 @@ function handleNameEntry(business, msg, phone, state) {
 }
 
 async function handleDateConfirmation(business, msg, phone, state) {
-  // CONFIRMAR
   if (msg === '1' || msg.includes('si') || msg.includes('sí') || msg.includes('confirm')) {
     try {
       const appointment = new Appointment({
@@ -323,12 +292,11 @@ async function handleDateConfirmation(business, msg, phone, state) {
              `Te enviaremos recordatorios 🔔\n\n` +
              `¡Nos vemos pronto! 😊`;
     } catch (error) {
-      console.error('Error creando cita:', error);
+      console.error('Error al crear la cita:', error);
       return getErrorMessage(business);
     }
   }
 
-  // CAMBIAR FECHA
   if (msg === '2' || msg.includes('cambiar')) {
     return `📞 *Para personalizar tu fecha/hora*\n\n` +
            `Por favor contáctanos directamente:\n\n` +
@@ -336,7 +304,6 @@ async function handleDateConfirmation(business, msg, phone, state) {
            `También puedes escribir *0* para volver al menú`;
   }
 
-  // CANCELAR
   if (msg === '0' || msg.includes('cancelar') || msg.includes('menu')) {
     ConversationManager.clearState(phone);
     return getMainMenu(business);
@@ -350,11 +317,7 @@ async function handleDateConfirmation(business, msg, phone, state) {
          `Escribe el número:`;
 }
 
-// ============================================
-// GESTIÓN DE CITAS EXISTENTES
-// ============================================
 async function handleManageAppointment(business, msg, phone, state, appointment) {
-  // CANCELAR
   if (msg === '1' || msg.includes('cancelar')) {
     try {
       appointment.status = 'cancelada';
@@ -370,7 +333,6 @@ async function handleManageAppointment(business, msg, phone, state, appointment)
     }
   }
 
-  // REAGENDAR
   if (msg === '2' || msg.includes('reagendar')) {
     try {
       appointment.status = 'cancelada';
@@ -390,7 +352,6 @@ async function handleManageAppointment(business, msg, phone, state, appointment)
     }
   }
 
-  // AGENDAR ADICIONAL
   if (msg === '3') {
     ConversationManager.updateState(phone, {
       flow: 'appointment',
@@ -400,19 +361,14 @@ async function handleManageAppointment(business, msg, phone, state, appointment)
     return getServiceSelectionMenu(business);
   }
 
-  // MENÚ
   if (msg === '0') {
     ConversationManager.clearState(phone);
     return getMainMenu(business);
   }
 
-  return `❌ Opción no válida\n\n` +
-         `Escribe el número de tu opción (0-3)`;
+  return `❌ Opción no válida\n\nEscribe el número de tu opción (0-3)`;
 }
 
-// ============================================
-// MENÚS Y FORMATOS
-// ============================================
 function getWelcomeMenu(business, existingAppointment) {
   let menu = `👋 *¡Bienvenido a ${business.name}!* ✨\n\n`;
   
@@ -455,8 +411,7 @@ function getServicesInfo(business) {
          `• Consulta de evaluación\n` +
          `• Plan de tratamiento personalizado\n` +
          `• Seguimiento post-tratamiento\n\n` +
-         `¿Quieres agendar?\n` +
-         `Escribe *1* o *agendar*`;
+         `¿Quieres agendar?\nEscribe *1* o *agendar*`;
 }
 
 function getScheduleInfo(business) {
@@ -506,9 +461,6 @@ function getErrorMessage(business) {
          `Escribe *menu* para volver al inicio`;
 }
 
-// ============================================
-// UTILIDADES
-// ============================================
 function isGreeting(msg) {
   const greetings = ['hola', 'hi', 'hello', 'buenas', 'hey', 'ola', 'buenos dias', 'buenas tardes', 'buenas noches'];
   return greetings.some(g => msg.includes(g));
