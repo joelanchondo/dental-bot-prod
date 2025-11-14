@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Dental Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+    
+    <script type="module">
+        // Dashboard React-like vanilla JS
+        const API_URL = window.location.origin;
+        let businessId = null;
+        let appointments = [];
+        let currentDate = new Date();
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('es-MX', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short'
+            });
+        }
+
+        function formatTime(date) {
+            return new Date(date).toLocaleTimeString('es-MX', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'confirmada': 'bg-green-100 text-green-800',
+                'pendiente': 'bg-yellow-100 text-yellow-800',
+                'en-curso': 'bg-blue-100 text-blue-800',
+                'completada': 'bg-gray-100 text-gray-600',
+                'cancelada': 'bg-red-100 text-red-800',
+                'retrasada': 'bg-orange-100 text-orange-800'
+            };
+            return colors[status] || 'bg-gray-100';
+        }
+
+        async function loadAppointments() {
+            if (!businessId) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/admin/appointments/today/${businessId}`);
+                appointments = await response.json();
+                render();
+            } catch (error) {
+                console.error('Error cargando citas:', error);
+            }
+        }
+
+        async function updateAppointmentStatus(id, status) {
+            try {
+                await fetch(`${API_URL}/api/admin/appointments/${id}/${status}`, {
+                    method: 'POST'
+                });
+                await loadAppointments();
+            } catch (error) {
+                console.error('Error actualizando cita:', error);
+            }
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            
+            app.innerHTML = `
+                <div class="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg">
+                        <div class="max-w-7xl mx-auto px-4 py-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-3xl">
+                                        🦷
+                                    </div>
+                                    <div>
+                                        <h1 class="text-2xl font-bold">Panel Administrativo</h1>
+                                        <p class="text-blue-100 text-sm">Clínica Dental Sonrisas</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm text-blue-100">Hoy</p>
+                                    <p class="text-lg font-semibold">${formatDate(currentDate)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="max-w-7xl mx-auto px-4 py-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            ${renderStats()}
+                        </div>
+
+                        <!-- Appointments List -->
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <i class="fas fa-calendar-day text-blue-600"></i>
+                                Citas de Hoy
+                            </h2>
+                            
+                            ${appointments.length === 0 ? `
+                                <div class="text-center py-12 text-gray-500">
+                                    <i class="fas fa-calendar-check text-6xl mb-4 text-gray-300"></i>
+                                    <p class="text-lg">No hay citas programadas para hoy</p>
+                                </div>
+                            ` : appointments.map(apt => renderAppointment(apt)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Attach event listeners
+            appointments.forEach(apt => {
+                const startBtn = document.getElementById(`start-${apt._id}`);
+                const completeBtn = document.getElementById(`complete-${apt._id}`);
+                const cancelBtn = document.getElementById(`cancel-${apt._id}`);
+
+                if (startBtn) startBtn.onclick = () => updateAppointmentStatus(apt._id, 'start');
+                if (completeBtn) completeBtn.onclick = () => updateAppointmentStatus(apt._id, 'complete');
+                if (cancelBtn) cancelBtn.onclick = () => {
+                    if (confirm('¿Cancelar esta cita?')) {
+                        updateAppointmentStatus(apt._id, 'cancel');
+                    }
+                };
+            });
+        }
+
+        function renderStats() {
+            const total = appointments.length;
+            const confirmadas = appointments.filter(a => a.status === 'confirmada').length;
+            const completadas = appointments.filter(a => a.status === 'completada').length;
+            const canceladas = appointments.filter(a => a.status === 'cancelada').length;
+
+            return `
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="text-gray-500 text-sm mb-1">Total Citas</div>
+                    <div class="text-3xl font-bold text-blue-600">${total}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="text-gray-500 text-sm mb-1">Confirmadas</div>
+                    <div class="text-3xl font-bold text-green-600">${confirmadas}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="text-gray-500 text-sm mb-1">Completadas</div>
+                    <div class="text-3xl font-bold text-gray-600">${completadas}</div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow">
+                    <div class="text-gray-500 text-sm mb-1">Canceladas</div>
+                    <div class="text-3xl font-bold text-red-600">${canceladas}</div>
+                </div>
+            `;
+        }
+
+        function renderAppointment(apt) {
+            const statusText = {
+                'confirmada': 'Confirmada',
+                'pendiente': 'Pendiente',
+                'en-curso': 'En Curso',
+                'completada': 'Completada',
+                'cancelada': 'Cancelada',
+                'retrasada': 'Retrasada'
+            };
+
+            return `
+                <div class="border-b last:border-b-0 py-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg">${apt.patient.name}</h3>
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-phone text-gray-400"></i> ${apt.patient.phone}
+                                    </p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(apt.status)}">
+                                    ${statusText[apt.status]}
+                                </span>
+                            </div>
+                            
+                            <div class="ml-15 space-y-1 text-sm text-gray-600">
+                                <p><i class="fas fa-clock w-4"></i> <strong>${formatTime(apt.datetime)}</strong></p>
+                                <p><i class="fas fa-tooth w-4"></i> ${apt.service}</p>
+                                ${apt.delay > 0 ? `<p class="text-orange-600"><i class="fas fa-exclamation-triangle w-4"></i> Retraso: ${apt.delay} min</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 ml-4">
+                            ${apt.status === 'confirmada' || apt.status === 'pendiente' ? `
+                                <button id="start-${apt._id}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold">
+                                    <i class="fas fa-play"></i> Iniciar
+                                </button>
+                            ` : ''}
+                            
+                            ${apt.status === 'en-curso' ? `
+                                <button id="complete-${apt._id}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">
+                                    <i class="fas fa-check"></i> Completar
+                                </button>
+                            ` : ''}
+                            
+                            ${apt.status !== 'completada' && apt.status !== 'cancelada' ? `
+                                <button id="cancel-${apt._id}" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize
+        async function init() {
+            // Get businessId from URL or default
+            const params = new URLSearchParams(window.location.search);
+            businessId = params.get('business') || '69140728eaf09eb81ad284f5'; // Tu ID de demo
+            
+            await loadAppointments();
+            
+            // Refresh every 30 seconds
+            setInterval(loadAppointments, 30000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
