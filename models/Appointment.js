@@ -6,27 +6,44 @@ const appointmentSchema = new mongoose.Schema({
     ref: 'Business',
     required: true
   },
+  
   patient: {
     name: { type: String, required: true },
     phone: { type: String, required: true },
-    email: { type: String }
+    email: String
   },
+  
   service: { type: String, required: true },
   datetime: { type: Date, required: true },
-  duration: { type: Number, default: 30 },
+  duration: { type: Number, default: 60 },
+  
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'],
-    default: 'pending'
+    enum: ['pendiente', 'confirmada', 'en-curso', 'completada', 'retrasada', 'cancelada'],
+    default: 'confirmada'
   },
+  
+  delay: { type: Number, default: 0 },
+  
+  reminders: {
+    sent24h: { type: Boolean, default: false },
+    sent1h: { type: Boolean, default: false },
+    sent10min: { type: Boolean, default: false }
+  },
+  
   source: {
     type: String,
-    enum: ['whatsapp', 'website', 'phone', 'in_person'],
+    enum: ['whatsapp', 'phone', 'web', 'walk-in'],
     default: 'whatsapp'
   },
+  
   notes: String
-}, {
-  timestamps: true
+}, { 
+  timestamps: true 
 });
+
+appointmentSchema.index({ businessId: 1, datetime: 1 });
+appointmentSchema.index({ 'patient.phone': 1 });
+appointmentSchema.index({ status: 1, datetime: 1 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);
