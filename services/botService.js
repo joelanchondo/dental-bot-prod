@@ -1,4 +1,5 @@
 const Appointment = require('../models/Appointment');
+const TemplateIntegration = require('./templateIntegration');
 
 // Estado en memoria
 const conversationStates = new Map();
@@ -30,17 +31,28 @@ async function processBotMessage(business, message, phone) {
   const msg = message.toLowerCase().trim();
   const state = ConversationManager.getState(phone);
 
-  console.log(`🤖 [${phone}] Mensaje: "${message}" | Estado: ${state.step || 'inicial'}`);
+  console.log(`🤖 [${phone}] Negocio: ${business.businessType} | Mensaje: "${message}" | Estado: ${state.step || 'inicial'}`);
 
   try {
-    if (business.plan === 'basico') {
-      return getBasicResponse(business, msg);
+    // 1. MEJORAR EL NEGOCIO CON CONFIGURACIÓN DEL TEMPLATE
+    const enhancedBusiness = TemplateIntegration.getBusinessConfig(business);
+    
+    // 2. MEJORAR LOS SERVICIOS SI ES NECESARIO
+    enhancedBusiness.services = TemplateIntegration.enhanceBusinessServices(business);
+
+    if (enhancedBusiness.plan === 'basico') {
+      const basicResponse = getBasicResponse(enhancedBusiness, msg);
+      return TemplateIntegration.enhanceBotResponse(enhancedBusiness, msg, basicResponse);
     }
 
-    return await getSmartResponse(business, msg, phone, state);
+    const smartResponse = await getSmartResponse(enhancedBusiness, msg, phone, state);
+    
+    // 3. MEJORAR LA RESPUESTA FINAL CON EL TEMPLATE
+    return TemplateIntegration.enhanceBotResponse(enhancedBusiness, msg, smartResponse);
+    
   } catch (error) {
     console.error('❌ Error procesando mensaje:', error);
-    return getErrorMessage(business);
+    return "⚠️ Lo siento, hubo un error. Por favor intenta de nuevo o contacta al: " + business.whatsappBusiness;
   }
 }
 
