@@ -80,7 +80,10 @@ router.post('/create', async (req, res) => {
         saturday: { open: "09:00", close: "14:00", active: true },
         sunday: { open: "09:00", close: "14:00", active: false }
       },
-      onboardingCompleted: true
+      onboardingCompleted: true,
+      // Campos de compatibilidad
+      name: businessName,
+      phone: whatsappBusiness
     };
 
     // Si es demo, agregar fecha de expiración (30 días)

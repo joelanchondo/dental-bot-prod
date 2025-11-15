@@ -1,64 +1,105 @@
 const mongoose = require('mongoose');
 
 const businessSchema = new mongoose.Schema({
-  name: {
+  // DATOS BÁSICOS DEL NEGOCIO
+  businessType: {
     type: String,
-    required: true,
-    trim: true
+    enum: ['dental', 'medical', 'automotive', 'barbershop', 'spa', 'consulting', 'other'],
+    required: true
   },
-  phone: {
+  businessName: {
     type: String,
     required: true
   },
-  phoneNumber: {
+  legalName: String,        // Razón Social
+  rfc: String,              // RFC
+  managerName: String,      // Nombre del encargado
+  
+  // CONTACTO Y UBICACIÓN
+  whatsappBusiness: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
-  email: {
+  contactEmail: {
     type: String,
-    trim: true,
-    lowercase: true
+    required: true
   },
   address: {
-    type: String,
-    required: true
+    street: String,
+    city: String,
+    state: String,
+    postalCode: String,
+    country: { type: String, default: 'México' }
   },
-  schedule: {
-    weekdays: { type: String, default: '9:00 AM - 6:00 PM' },
-    saturday: { type: String, default: '9:00 AM - 2:00 PM' },
-    sunday: { type: String, default: 'Cerrado' }
-  },
+  
+  // CONFIGURACIÓN DE SERVICIOS (dinámica por tipo de negocio)
   services: [{
-    type: String
+    name: String,
+    duration: Number,  // minutos
+    price: Number
   }],
+  
+  // HORARIOS DE ATENCIÓN
+  businessHours: {
+    monday: { open: String, close: String, active: { type: Boolean, default: true } },
+    tuesday: { open: String, close: String, active: { type: Boolean, default: true } },
+    wednesday: { open: String, close: String, active: { type: Boolean, default: true } },
+    thursday: { open: String, close: String, active: { type: Boolean, default: true } },
+    friday: { open: String, close: String, active: { type: Boolean, default: true } },
+    saturday: { open: String, close: String, active: { type: Boolean, default: true } },
+    sunday: { open: String, close: String, active: { type: Boolean, default: false } }
+  },
+  
+  // PLAN Y ESTADO
   plan: {
     type: String,
-    enum: ['basico', 'premium', 'empresa', 'profesional'],
-    default: 'basico'
-  },
-  messages: {
-    welcome: String,
-    appointmentConfirmation: String,
-    reminder: String
-  },
-  settings: {
-    timezone: { type: String, default: 'America/Mexico_City' },
-    appointmentDuration: { type: Number, default: 30 }
+    enum: ['demo', 'basic', 'pro', 'premium'],
+    default: 'demo'
   },
   status: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'trial'],
+    enum: ['active', 'inactive', 'suspended'],
     default: 'active'
   },
-  whatsapp: {
-    number: String,
-    twilioSid: String,
-    twilioToken: String,
-    isActive: { type: Boolean, default: false }
+  
+  // CONFIGURACIONES AVANZADAS (para planes pro/premium)
+  googleConfig: {
+    connected: { type: Boolean, default: false },
+    accessToken: String,
+    refreshToken: String,
+    email: String
+  },
+  
+  reminders: {
+    whatsapp24h: { type: Boolean, default: false },
+    whatsapp1h: { type: Boolean, default: false },
+    email24h: { type: Boolean, default: false }
+  },
+  
+  // METADATOS
+  onboardingCompleted: { type: Boolean, default: false },
+  demoExpiresAt: Date,
+  salesAgent: String,  // Quién vendió el servicio
+  
+  // CAMPOS COMPATIBILIDAD (para no romper funcionalidad existente)
+  name: { type: String, required: false },  // Compatibilidad
+  phone: { type: String, required: false }, // Compatibilidad
+  
+}, { 
+  timestamps: true 
+});
+
+// Middleware para mantener compatibilidad
+businessSchema.pre('save', function(next) {
+  // Si no hay 'name', usar businessName
+  if (!this.name && this.businessName) {
+    this.name = this.businessName;
   }
-}, {
-  timestamps: true
+  // Si no hay 'phone', usar whatsappBusiness
+  if (!this.phone && this.whatsappBusiness) {
+    this.phone = this.whatsappBusiness;
+  }
+  next();
 });
 
 module.exports = mongoose.model('Business', businessSchema);
