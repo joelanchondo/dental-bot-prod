@@ -315,33 +315,37 @@ router.get('/', (req, res) => {
                 const resultDiv = document.getElementById('result');
                 
                 if (result.success) {
-                    resultDiv.innerHTML = `
+                    resultDiv.innerHTML = \`
                         <h3 class="success">✅ Cliente Creado Exitosamente</h3>
-                        <p><strong>Negocio:</strong> ${result.business.businessName}</p>
-                        <p><strong>Plan:</strong> ${result.business.plan.toUpperCase()}</p>
-                        <p><strong>ID:</strong> ${result.business.id}</p>
-                        <p><strong>WhatsApp:</strong> <a href="${result.business.whatsappUrl}" target="_blank">${result.business.whatsappUrl}</a></p>
-                        <p><strong>Dashboard:</strong> <a href="${result.business.dashboardUrl}" target="_blank">${result.business.dashboardUrl}</a></p>
-                        <p><strong>Setup:</strong> <a href="${result.business.setupUrl}" target="_blank">${result.business.setupUrl}</a></p>
-                    `;
+                        <p><strong>Negocio:</strong> \${result.business.businessName}</p>
+                        <p><strong>Plan:</strong> \${result.business.plan.toUpperCase()}</p>
+                        <p><strong>ID:</strong> \${result.business.id}</p>
+                        <p><strong>WhatsApp:</strong> <a href="\${result.business.whatsappUrl}" target="_blank">\${result.business.whatsappUrl}</a></p>
+                        <p><strong>Dashboard:</strong> <a href="\${result.business.dashboardUrl}" target="_blank">\${result.business.dashboardUrl}</a></p>
+                        <p><strong>Setup:</strong> <a href="\${result.business.setupUrl}" target="_blank">\${result.business.setupUrl}</a></p>
+                    \`;
                 } else {
-                    resultDiv.innerHTML = `
+                    resultDiv.innerHTML = \`
                         <h3 class="error">❌ Error</h3>
-                        <p>${result.error}</p>
-                    `;
+                        <p>\${result.error}</p>
+                    \`;
                 }
                 
                 resultDiv.style.display = 'block';
                 resultDiv.scrollIntoView({ behavior: 'smooth' });
 
             } catch (error) {
-                document.getElementById('result').innerHTML = `
+                document.getElementById('result').innerHTML = \`
                     <h3 class="error">❌ Error de conexión</h3>
-                    <p>${error.message}</p>
-                `;
+                    <p>\${error.message}</p>
+                \`;
                 document.getElementById('result').style.display = 'block';
             }
         });
     </script>
 </body>
 </html>
+`);
+});
+
+module.exports = router;
