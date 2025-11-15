@@ -37,9 +37,11 @@ connectDB();
 const webhookRoutes = require('./routes/webhook');
 const adminRoutes = require('./routes/admin');
 const onboardingRoutes = require('./routes/onboarding');
+const onboardingDashboardRoutes = require('./routes/onboarding-dashboard');
 
 app.use('/webhook', webhookRoutes);
 app.use('/api/onboarding', onboardingRoutes);
+app.use('/onboarding', onboardingDashboardRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Health check
