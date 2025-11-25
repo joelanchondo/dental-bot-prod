@@ -12,8 +12,8 @@ router.get('/', (req, res) => {
     <title>Sistema de Onboarding - Dental Bot</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -140,7 +140,7 @@ router.get('/', (req, res) => {
             <h1>🚀 Sistema de Onboarding</h1>
             <p>Creación de clientes para Dental Bot</p>
         </div>
-        
+
         <div class="form-container">
             <form id="onboardingForm">
                 <!-- SECCIÓN 1: TIPO DE NEGOCIO -->
@@ -190,7 +190,7 @@ router.get('/', (req, res) => {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="whatsappBusiness">WhatsApp Business *</label>
-                            <input type="tel" id="whatsappBusiness" name="whatsappBusiness" 
+                            <input type="tel" id="whatsappBusiness" name="whatsappBusiness"
                                    placeholder="+5215512345678" required>
                         </div>
                         <div class="form-group">
@@ -282,7 +282,7 @@ router.get('/', (req, res) => {
         // Envío del formulario
         document.getElementById('onboardingForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(this);
             const data = {
                 businessType: formData.get('businessType'),
@@ -313,7 +313,7 @@ router.get('/', (req, res) => {
 
                 const result = await response.json();
                 const resultDiv = document.getElementById('result');
-                
+
                 if (result.success) {
                     resultDiv.innerHTML = \`
                         <h3 class="success">✅ Cliente Creado Exitosamente</h3>
@@ -330,7 +330,7 @@ router.get('/', (req, res) => {
                         <p>\${result.error}</p>
                     \`;
                 }
-                
+
                 resultDiv.style.display = 'block';
                 resultDiv.scrollIntoView({ behavior: 'smooth' });
 
@@ -348,19 +348,17 @@ router.get('/', (req, res) => {
 `);
 });
 
-module.exports = router;
-
 // GET /calendar-dashboard - Calendario visual para agendar citas
 router.get('/calendar', (req, res) => {
   const { businessId, clientName, service, phone } = req.query;
-  
+
   console.log('🔍 [CALENDAR DEBUG] Params received:', { businessId, clientName, service, phone });
-  
+
   if (!businessId || businessId === 'undefined') {
     return res.status(400).send('Error: businessId es requerido');
   }
 
-  res.send(\`
+  res.send(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -392,3 +390,5 @@ router.get('/calendar', (req, res) => {
 </html>
   \`);
 });
+
+module.exports = router;
