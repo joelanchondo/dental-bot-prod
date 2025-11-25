@@ -85,7 +85,21 @@ async function handleAppointmentFlow(business, msg, phone, state) {
       state.step = 'get_service';
       return `👋 Hola ${msg}! ¿Qué servicio necesitas?\n\n` + getServicesList(business);
 
+case 'get_service':        state.data.service = msg;        ConversationManager.clearState(phone); // Finalizar el flujo de conversación        // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---        const clientPhone = phone.replace('whatsapp:', ''); // Limpiar el prefijo 'whatsapp:'        const BASE_URL = process.env.RENDER_URL; // Usar la variable de entorno de Render                const calendarUrl = `${BASE_URL}/calendar-dashboard?` +                            `businessId=${business._id}` +                            `&clientName=${encodeURIComponent(state.data.name)}` +                            `&service=${encodeURIComponent(state.data.service)}` +                            `&phone=${clientPhone}`;        // -----------------------------------------------------        return `📅 *Selecciona tu cita*
+
+Hola ${state.data.name}, selecciona una fecha y hora disponible para tu servicio: *${state.data.service}*
+
+${calendarUrl}
+
+*La disponibilidad se actualiza en tiempo real.* Si necesitas otra cosa, inicia un nuevo menú.`;    case 'confirm':
 case 'get_service':        state.data.service = msg;        ConversationManager.clearState(phone); // Finalizar el flujo de conversación        // --- 🔑 GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---        const clientPhone = phone.replace('whatsapp:', ''); // Limpiar el prefijo 'whatsapp:'        const BASE_URL = process.env.RENDER_URL; // Usar la variable de entorno de Render                const calendarUrl = `${BASE_URL}/calendar-dashboard?` +                            `businessId=${business._id}` +                            `&clientName=${encodeURIComponent(state.data.name)}` +                            `&service=${encodeURIComponent(state.data.service)}` +                            `&phone=${clientPhone}`;        // -----------------------------------------------------        return `📅 *Selecciona tu cita*
+
+Hola ${state.data.name}, selecciona una fecha y hora disponible para tu servicio: *${state.data.service}*
+
+${calendarUrl}
+
+*La disponibilidad se actualiza en tiempo real.* Si necesitas otra cosa, inicia un nuevo menú.`;    case 'confirm':
+case 'get_service':        state.data.service = msg;        ConversationManager.clearState(phone); // Finalizar el flujo de conversación        // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---        const clientPhone = phone.replace('whatsapp:', ''); // Limpiar el prefijo 'whatsapp:'        const BASE_URL = process.env.RENDER_URL; // Usar la variable de entorno de Render                const calendarUrl = `${BASE_URL}/calendar-dashboard?` +                            `businessId=${business._id}` +                            `&clientName=${encodeURIComponent(state.data.name)}` +                            `&service=${encodeURIComponent(state.data.service)}` +                            `&phone=${clientPhone}`;        // -----------------------------------------------------        return `📅 *Selecciona tu cita*
 
 Hola ${state.data.name}, selecciona una fecha y hora disponible para tu servicio: *${state.data.service}*
 
