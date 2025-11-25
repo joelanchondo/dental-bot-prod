@@ -13,6 +13,18 @@ class ConversationManager {
         data: {},
         lastUpdate: new Date()
       });
+
+  console.log("🔍 [BOT DEBUG] Business object received:", JSON.stringify({
+    _id: business._id,
+    businessName: business.businessName, 
+    businessType: business.businessType,
+    whatsappBusiness: business.whatsappBusiness,
+    plan: business.plan,
+    hasId: !!business._id,
+    idType: typeof business._id
+  }, null, 2));
+
+  console.log("🔍 [BOT DEBUG] Business object:", JSON.stringify(business, null, 2));
     }
     return conversationStates.get(phone);
   }

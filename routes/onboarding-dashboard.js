@@ -349,3 +349,46 @@ router.get('/', (req, res) => {
 });
 
 module.exports = router;
+
+// GET /calendar-dashboard - Calendario visual para agendar citas
+router.get('/calendar', (req, res) => {
+  const { businessId, clientName, service, phone } = req.query;
+  
+  console.log('🔍 [CALENDAR DEBUG] Params received:', { businessId, clientName, service, phone });
+  
+  if (!businessId || businessId === 'undefined') {
+    return res.status(400).send('Error: businessId es requerido');
+  }
+
+  res.send(\`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendario - Agendar Cita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">📅 Calendario de Citas</h1>
+            <p class="text-gray-600">Selecciona fecha y hora para tu cita</p>
+        </div>
+
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-bold text-lg">Resumen de la cita:</h3>
+            <p><strong>Paciente:</strong> \${clientName || 'No especificado'}</p>
+            <p><strong>Servicio:</strong> \${service || 'No especificado'}</p>
+            <p><strong>Teléfono:</strong> \${phone || 'No especificado'}</p>
+        </div>
+
+        <div class="text-center py-12">
+            <div class="text-6xl mb-4">🔄</div>
+            <h2 class="text-2xl font-bold text-gray-700">Calendario en Desarrollo</h2>
+            <p class="text-gray-600 mt-2">Esta funcionalidad estará disponible pronto</p>
+            <p class="text-sm text-gray-500 mt-4">Business ID: \${businessId}</p>
+        </div>
+    </div>
+</body>
+</html>
+  \`);
+});
