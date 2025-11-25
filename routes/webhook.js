@@ -6,27 +6,41 @@ const twilio = require('twilio');
 
 router.post('/whatsapp', async (req, res) => {
   try {
-    const { Body, From } = req.body;
+    const { Body, From, To } = req.body;
     
-    // 🔒 PROTECCIÓN: Ignorar mensajes sin cuerpo
     if (!Body || Body.trim() === '') {
       console.log('📱 Mensaje sin cuerpo ignorado de:', From);
       return res.status(200).send('OK');
     }
     
-    console.log('📱 MENSAJE RECIBIDO:', Body, 'de:', From);
-
-    const business = await Business.findOne({});
+    console.log('📱 MENSAJE RECIBIDO:', Body, 'de:', From, 'a:', To);
+    
+    // 🔍 BUSCAR NEGOCIO POR NÚMERO DE WHATSAPP
+    const toNumber = To?.replace('whatsapp:', '');
+    let business = await Business.findOne({ 
+      whatsappBusiness: { $regex: toNumber, $options: 'i' }
+    });
+    
+    // Si no se encuentra, usar el primero disponible (fallback)
+    if (!business) {
+      console.log('⚠️ No se encontró negocio para', toNumber, '- usando primero disponible');
+      business = await Business.findOne({});
+    }
+    
+    if (!business) {
+      console.log('❌ No hay negocios en la BD');
+      return res.status(200).send('OK');
+    }
+    
+    console.log('🏥 Negocio encontrado:', business.businessName, business._id);
+    
     const response = await processBotMessage(business, Body, From);
     
     console.log('🤖 RESPUESTA GENERADA - ENVIANDO...');
     
-    const accountSid = process.env.TWILIO_ACCOUNT_SID || business.whatsapp.twilioSid;
-    const authToken = process.env.TWILIO_AUTH_TOKEN || business.whatsapp.twilioToken;
-    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || business.whatsapp.number;
-    
-    console.log('🔐 Twilio Config:');
-    console.log('From:', fromNumber);
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER;
     
     const client = twilio(accountSid, authToken);
     
@@ -36,9 +50,9 @@ router.post('/whatsapp', async (req, res) => {
       to: From
     });
     
-    console.log('✅ RESPUESTA ENVIADA A WHATSAPP');
-    
+    console.log('✅ RESPUESTA ENVIADA');
     res.status(200).send('OK');
+    
   } catch (error) {
     console.error('❌ ERROR:', error.message);
     res.status(200).send('OK');
