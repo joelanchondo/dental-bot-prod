@@ -31,12 +31,12 @@ async function processBotMessage(business, message, phone) {
   const msg = message.toLowerCase().trim();
   const state = ConversationManager.getState(phone);
 
-  console.log(`🤖 [${phone}] Negocio: ${business.businessType} | Mensaje: "${message}" | Estado: ${state.step || 'inicial'}`);
+  console.log(`🤖 [${phone}] Negocio: ${business.businessName} | Mensaje: "${message}" | Estado: ${state.step || 'inicial'}`);
 
   try {
     // 1. MEJORAR EL NEGOCIO CON CONFIGURACIÓN DEL TEMPLATE
     const enhancedBusiness = TemplateIntegration.getBusinessConfig(business);
-    
+
     // 2. MEJORAR LOS SERVICIOS SI ES NECESARIO
     enhancedBusiness.services = TemplateIntegration.enhanceBusinessServices(business);
 
@@ -46,10 +46,10 @@ async function processBotMessage(business, message, phone) {
     }
 
     const smartResponse = await getSmartResponse(enhancedBusiness, msg, phone, state);
-    
+
     // 3. MEJORAR LA RESPUESTA FINAL CON EL TEMPLATE
     return TemplateIntegration.enhanceBotResponse(enhancedBusiness, msg, smartResponse);
-    
+
   } catch (error) {
     console.error('❌ Error procesando mensaje:', error);
     return "⚠️ Lo siento, hubo un error. Por favor intenta de nuevo o contacta al: " + business.whatsappBusiness;
@@ -66,25 +66,24 @@ function getBasicResponse(business, msg) {
 
   if (msg.includes('ubicacion') || msg.includes('direccion') || msg === '5') {
     return `📍 *Nuestra Ubicación*\n\n${business.address}\n\n` +
-           `📞 Teléfono: ${business.phone}`;
+           `📞 WhatsApp: ${business.whatsappBusiness}`;
   }
 
   if (msg.includes('servicio') || msg === '3') {
+    const servicesList = business.services.map(s => typeof s === 'object' ? s.name : s).map(s => `• ${s}`).join('\n');
     return `🦷 *Nuestros Servicios*\n\n` +
-           business.services.map(s => `• ${s}`).join('\n') +
-           `\n\n📞 Para agendar llama: ${business.phone}`;
+           servicesList +
+           `\n\n📞 Para agendar: ${business.whatsappBusiness}`;
   }
 
   if (msg.includes('agendar') || msg.includes('cita') || msg === '1') {
     return `📅 *Para agendar tu cita*\n\n` +
-           `Por favor llámanos:\n📞 ${business.phone}\n\n` +
-           `O envíanos:\n` +
-           `• Tu nombre completo\n` +
-           `• Servicio que necesitas\n` +
-           `• Fecha y hora preferida`;
+           `Por favor escríbenos:\n📱 ${business.whatsappBusiness}\n\n` +
+           `O inicia el proceso aquí:\n` +
+           `• Escribe *1* para agendar cita`;
   }
 
-  return `👋 ¡Hola! Soy el asistente de *${business.name}*\n\n` +
+  return `👋 ¡Hola! Soy el asistente de *${business.businessName}*\n\n` +
          `¿En qué puedo ayudarte?\n\n` +
          `1️⃣ Agendar cita\n` +
          `2️⃣ Ver mi cita\n` +
@@ -123,9 +122,9 @@ async function getSmartResponse(business, msg, phone, state) {
   // OPCIONES DEL MENÚ
   if (msg === '1' || msg.includes('agendar')) {
     if (existingAppointment) {
-      ConversationManager.updateState(phone, { 
-        flow: 'manage_appointment', 
-        step: 'options' 
+      ConversationManager.updateState(phone, {
+        flow: 'manage_appointment',
+        step: 'options'
       });
       return `📋 *Ya tienes una cita programada*\n\n` +
              formatAppointmentDetail(existingAppointment) +
@@ -137,9 +136,9 @@ async function getSmartResponse(business, msg, phone, state) {
              `Escribe el número:`;
     }
 
-    ConversationManager.updateState(phone, { 
-      flow: 'appointment', 
-      step: 'select_service' 
+    ConversationManager.updateState(phone, {
+      flow: 'appointment',
+      step: 'select_service'
     });
     return getServiceSelectionMenu(business);
   }
@@ -151,9 +150,9 @@ async function getSmartResponse(business, msg, phone, state) {
              `Escribe *1* o *agendar*`;
     }
 
-    ConversationManager.updateState(phone, { 
-      flow: 'manage_appointment', 
-      step: 'options' 
+    ConversationManager.updateState(phone, {
+      flow: 'manage_appointment',
+      step: 'options'
     });
     return `📅 *Tu Cita Programada*\n\n` +
            formatAppointmentDetail(existingAppointment) +
@@ -187,13 +186,13 @@ async function handleAppointmentFlow(business, msg, phone, state) {
   switch (state.step) {
     case 'select_service':
       return handleServiceSelection(business, msg, phone, state);
-    
+
     case 'enter_name':
       return handleNameEntry(business, msg, phone, state);
-    
-    case 'confirm_date':
-      return handleDateConfirmation(business, msg, phone, state);
-    
+
+    case 'select_date':
+      return handleDateSelection(business, msg, phone, state);
+
     default:
       state.step = 'select_service';
       return getServiceSelectionMenu(business);
@@ -202,25 +201,27 @@ async function handleAppointmentFlow(business, msg, phone, state) {
 
 function handleServiceSelection(business, msg, phone, state) {
   const serviceIndex = parseInt(msg) - 1;
-  if (serviceIndex >= 0 && serviceIndex < business.services.length) {
-    const service = business.services[serviceIndex];
+  const servicesList = business.services.map(s => typeof s === 'object' ? s.name : s);
+  
+  if (serviceIndex >= 0 && serviceIndex < servicesList.length) {
+    const service = servicesList[serviceIndex];
     state.data.service = service;
     state.step = 'enter_name';
-    
+
     return `✅ *${service}*\n\n` +
            `Excelente elección! 😊\n\n` +
            `👤 *¿Cuál es tu nombre completo?*\n\n` +
            `_(Ejemplo: María González López)_`;
   }
 
-  const matchedService = business.services.find(s => 
+  const matchedService = servicesList.find(s =>
     s.toLowerCase().includes(msg) || msg.includes(s.toLowerCase())
   );
-  
+
   if (matchedService) {
     state.data.service = matchedService;
     state.step = 'enter_name';
-    
+
     return `✅ *${matchedService}*\n\n` +
            `Perfecto! 😊\n\n` +
            `👤 *¿Cuál es tu nombre completo?*\n\n` +
@@ -239,30 +240,26 @@ function handleNameEntry(business, msg, phone, state) {
   }
 
   state.data.name = capitalizeWords(msg);
-  state.step = 'confirm_date';
+  state.step = 'select_date';
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(10, 0, 0, 0);
-  state.data.datetime = tomorrow;
-
-  const dateStr = tomorrow.toLocaleDateString('es-MX', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long' 
-  });
+  // Generar link al calendario visual
+  const baseUrl = process.env.BASE_URL || 'https://dental-bot-prod.onrender.com';
+  const calendarUrl = `${baseUrl}/calendar-dashboard?businessId=${business._id}&clientName=${encodeURIComponent(state.data.name)}&service=${encodeURIComponent(state.data.service)}&phone=${encodeURIComponent(phone)}`;
 
   return `👋 *Hola ${state.data.name}!*\n\n` +
          `📋 *Resumen de tu cita:*\n\n` +
          `🦷 Servicio: ${state.data.service}\n` +
-         `📅 Fecha: ${dateStr}\n` +
-         `⏰ Hora: 10:00 AM\n` +
-         `📍 ${business.address}\n\n` +
-         `*¿Confirmas esta cita?*\n\n` +
-         `1️⃣ Sí, confirmar\n` +
-         `2️⃣ Cambiar fecha/hora\n` +
-         `0️⃣ Cancelar\n\n` +
-         `Escribe el número:`;
+         `👤 Paciente: ${state.data.name}\n\n` +
+         `📅 *Para seleccionar fecha y hora:*\n\n` +
+         `Haz clic en este enlace para elegir en el calendario:\n` +
+         `${calendarUrl}\n\n` +
+         `_Una vez que elijas la fecha, te confirmaremos por aquí_`;
+}
+
+function handleDateSelection(business, msg, phone, state) {
+  return `📅 *Selección de Fecha*\n\n` +
+         `Por favor usa el enlace del calendario que te envié anteriormente para seleccionar fecha y hora visualmente.\n\n` +
+         `¿Necesitas que te reenvíe el enlace?`;
 }
 
 async function handleDateConfirmation(business, msg, phone, state) {
@@ -297,7 +294,7 @@ async function handleDateConfirmation(business, msg, phone, state) {
              `📅 ${dateStr}\n` +
              `⏰ 10:00 AM\n` +
              `📍 ${business.address}\n\n` +
-             `📞 Contacto: ${business.phone}\n\n` +
+             `📞 Contacto: ${business.whatsappBusiness}\n\n` +
              `*Recomendaciones:*\n` +
              `• Llega 10 min antes ⏱️\n` +
              `• Trae identificación 📋\n\n` +
@@ -312,7 +309,7 @@ async function handleDateConfirmation(business, msg, phone, state) {
   if (msg === '2' || msg.includes('cambiar')) {
     return `📞 *Para personalizar tu fecha/hora*\n\n` +
            `Por favor contáctanos directamente:\n\n` +
-           `📱 ${business.phone}\n\n` +
+           `📱 ${business.whatsappBusiness}\n\n` +
            `También puedes escribir *0* para volver al menú`;
   }
 
@@ -349,7 +346,7 @@ async function handleManageAppointment(business, msg, phone, state, appointment)
     try {
       appointment.status = 'cancelada';
       await appointment.save();
-      
+
       ConversationManager.updateState(phone, {
         flow: 'appointment',
         step: 'select_service',
@@ -382,8 +379,8 @@ async function handleManageAppointment(business, msg, phone, state, appointment)
 }
 
 function getWelcomeMenu(business, existingAppointment) {
-  let menu = `👋 *¡Bienvenido a ${business.name}!* ✨\n\n`;
-  
+  let menu = `👋 *¡Bienvenido a ${business.businessName}!* ✨\n\n`;
+
   if (existingAppointment) {
     menu += `📋 *Tienes una cita programada* ✅\n\n`;
   }
@@ -411,14 +408,16 @@ function getServiceSelectionMenu(business) {
 }
 
 function getServicesList(business) {
-  return business.services
+  const servicesList = business.services.map(s => typeof s === 'object' ? s.name : s);
+  return servicesList
     .map((service, i) => `${i + 1}️⃣ ${service}`)
     .join('\n');
 }
 
 function getServicesInfo(business) {
+  const servicesList = business.services.map(s => typeof s === 'object' ? s.name : s);
   return `🏥 *Nuestros Servicios* ✨\n\n` +
-         business.services.map(s => `• ${s}`).join('\n') +
+         servicesList.map(s => `• ${s}`).join('\n') +
          `\n\n💫 *Incluye:*\n` +
          `• Consulta de evaluación\n` +
          `• Plan de tratamiento personalizado\n` +
@@ -437,14 +436,14 @@ function getScheduleInfo(business) {
 function getLocationInfo(business) {
   return `📍 *Nuestra Ubicación* 🗺️\n\n` +
          `${business.address}\n\n` +
-         `📞 *Contacto:*\n${business.phone}\n\n` +
+         `📞 *Contacto:*\n${business.whatsappBusiness}\n\n` +
          `¿Agendar cita? Escribe *1*`;
 }
 
 function getEmergencyInfo(business) {
   return `🚨 *Emergencia Dental* 🆘\n\n` +
          `Si tienes una emergencia, contáctanos inmediatamente:\n\n` +
-         `📞 *${business.phone}*\n\n` +
+         `📞 *${business.whatsappBusiness}*\n\n` +
          `Atendemos emergencias en horario laboral\n\n` +
          `Escribe *0* para volver al menú`;
 }
@@ -469,7 +468,7 @@ function formatAppointmentDetail(appointment) {
 function getErrorMessage(business) {
   return `⚠️ *Ups! Algo salió mal*\n\n` +
          `Por favor intenta de nuevo o contáctanos:\n\n` +
-         `📞 ${business.phone}\n\n` +
+         `📞 ${business.whatsappBusiness}\n\n` +
          `Escribe *menu* para volver al inicio`;
 }
 
