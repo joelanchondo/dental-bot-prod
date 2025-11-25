@@ -92,3 +92,66 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🚀 Onboarding: http://localhost:${PORT}/onboarding`);
 });
+
+// Ruta admin dashboard
+app.get('/admin', async (req, res) => {
+  try {
+    const businesses = await require('./models/Business').find().sort({ createdAt: -1 });
+    
+    res.send(\`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .header { background: #dc2626; color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .business-list { background: white; padding: 20px; border-radius: 8px; }
+        .business-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin: 2px; }
+        .btn-delete { background: #dc2626; color: white; }
+        .btn-view { background: #2563eb; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚙️ Admin Dashboard</h1>
+        <p>Gestión de Clientes</p>
+    </div>
+    
+    <div class="business-list">
+        <h2>📋 Clientes (\${businesses.length})</h2>
+        \${businesses.map(business => \`
+            <div class="business-item">
+                <div>
+                    <strong>\${business.businessName}</strong><br>
+                    <small>Plan: \${business.plan} | \${new Date(business.createdAt).toLocaleDateString('es-MX')}</small>
+                </div>
+                <div>
+                    <a href="/dashboard/\${business._id}" target="_blank" class="btn btn-view">Ver</a>
+                    <button class="btn btn-delete" onclick="deleteBusiness('\${business._id}')">Eliminar</button>
+                </div>
+            </div>
+        \`).join('')}
+    </div>
+
+    <script>
+        function deleteBusiness(businessId) {
+            if (confirm('¿Eliminar este cliente?')) {
+                fetch('/api/admin/businesses/' + businessId, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Cliente eliminado');
+                        location.reload();
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+    \`);
+  } catch (error) {
+    res.status(500).send('Error: ' + error.message);
+  }
+});
