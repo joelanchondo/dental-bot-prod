@@ -105,8 +105,8 @@ router.post('/create', async (req, res) => {
       else if (existingBusiness.businessName === businessName) duplicateField = 'nombre comercial';
 
       return res.status(400).json({ 
-        error: \`Cliente duplicado\`,
-        details: [\`Ya existe un negocio con este \${duplicateField}: \${duplicateField === 'WhatsApp' ? whatsappBusiness : duplicateField === 'email' ? contactEmail : businessName}\`],
+        error: `Cliente duplicado`,
+        details: [`Ya existe un negocio con este \${duplicateField}: \${duplicateField === 'WhatsApp' ? whatsappBusiness : duplicateField === 'email' ? contactEmail : businessName}`],
         duplicateId: existingBusiness._id
       });
     }
@@ -159,10 +159,10 @@ router.post('/create', async (req, res) => {
         businessName: business.businessName,
         businessType: business.businessType,
         plan: business.plan,
-        whatsappUrl: \`https://wa.me/\${business.whatsappBusiness.replace('+', '')}\`,
-        dashboardUrl: \`https://dental-bot-prod.onrender.com/dashboard/\${business._id}\`,
-        setupUrl: \`https://dental-bot-prod.onrender.com/api/setup/\${business._id}\`,
-        adminUrl: \`https://dental-bot-prod.onrender.com/admin\`
+        whatsappUrl: `https://wa.me/\${business.whatsappBusiness.replace('+', '')}`,
+        dashboardUrl: `https://dental-bot-prod.onrender.com/dashboard/\${business._id}`,
+        setupUrl: `https://dental-bot-prod.onrender.com/api/setup/\${business._id}`,
+        adminUrl: `https://dental-bot-prod.onrender.com/admin`
       }
     });
 
@@ -174,7 +174,7 @@ router.post('/create', async (req, res) => {
       const field = Object.keys(error.keyPattern)[0];
       return res.status(400).json({ 
         error: 'Error de duplicado',
-        details: [\`Ya existe un negocio con este \${field}\`]
+        details: [`Ya existe un negocio con este \${field}`]
       });
     }
 
