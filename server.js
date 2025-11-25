@@ -166,3 +166,6 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Onboarding: http://localhost:${PORT}/onboarding`);
   console.log(`👑 Admin: http://localhost:${PORT}/admin`);
 });
+
+// Agregar ruta calendar-dashboard (antes del 404)
+app.use('/calendar-dashboard', onboardingDashboardRoutes);
