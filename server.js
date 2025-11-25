@@ -113,3 +113,77 @@ app.listen(PORT, () => {
   console.log(`📅 Calendario: http://localhost:${PORT}/dashboard/calendar`);
   console.log(`🏥 Onboarding: http://localhost:${PORT}/onboarding`);
 });
+// ⚠️ RUTA TEMPORAL - Crear datos de demo (BORRAR después de usar)
+app.get('/setup-demo-data', async (req, res) => {
+  try {
+    const Business = require('./models/Business');
+    const Appointment = require('./models/Appointment');
+    
+    // Crear negocio demo
+    const business = await Business.create({
+      businessType: 'dental',
+      businessName: 'Clínica Dental Demo',
+      managerName: 'Dr. Demo',
+      whatsappBusiness: '+5219999999999',
+      contactEmail: 'demo@clinic.com',
+      address: {
+        street: 'Av. Demo 123',
+        city: 'Chihuahua',
+        state: 'Chihuahua',
+        country: 'México'
+      },
+      services: [
+        { name: 'Limpieza Dental', duration: 30, price: 500, active: true },
+        { name: 'Revisión General', duration: 20, price: 300, active: true },
+        { name: 'Blanqueamiento', duration: 60, price: 2000, active: true }
+      ],
+      businessHours: {
+        monday: { open: '09:00', close: '18:00', active: true },
+        tuesday: { open: '09:00', close: '18:00', active: true },
+        wednesday: { open: '09:00', close: '18:00', active: true },
+        thursday: { open: '09:00', close: '18:00', active: true },
+        friday: { open: '09:00', close: '18:00', active: true },
+        saturday: { open: '10:00', close: '14:00', active: true },
+        sunday: { open: '00:00', close: '00:00', active: false }
+      },
+      plan: 'pro',
+      status: 'active',
+      onboardingCompleted: true
+    });
+    
+    // Crear citas demo
+    const today = new Date();
+    const appointments = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const futureDate = new Date(today);
+      futureDate.setDate(futureDate.getDate() + i);
+      
+      appointments.push({
+        businessId: business._id,
+        clientName: `Cliente Demo ${i + 1}`,
+        clientPhone: `+52112345678${i}`,
+        service: ['Limpieza Dental', 'Revisión General', 'Blanqueamiento'][i % 3],
+        dateTime: new Date(futureDate.getFullYear(), futureDate.getMonth(), futureDate.getDate(), 10 + i, 0),
+        duration: 30,
+        status: i === 0 ? 'pending' : 'confirmed'
+      });
+    }
+    
+    await Appointment.insertMany(appointments);
+    
+    res.json({
+      success: true,
+      message: 'Datos de demo creados exitosamente',
+      businessId: business._id,
+      dashboardUrl: `https://dental-bot-prod.onrender.com/dashboard/calendar?businessId=${business._id}`,
+      appointments: appointments.length
+    });
+    
+  } catch (error) {
+    res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
