@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Business = require('../models/Business');
-const Appointment = require('../models/Appointment');
+const AppointmentSync = require('../services/appointmentSync');
 
 // GET /dashboard/:businessId - Dashboard del cliente
 router.get('/:businessId', async (req, res) => {
@@ -11,9 +11,12 @@ router.get('/:businessId', async (req, res) => {
       return res.status(404).send('Negocio no encontrado');
     }
 
-    const appointments = await Appointment.find({ businessId: req.params.businessId })
-      .sort({ datetime: -1 })
-      .limit(10);
+    const appointments = await AppointmentSync.syncForDashboard(req.params.businessId);
+    const todayAppointments = appointments.filter(apt => {
+      const aptDate = new Date(apt.dateTime);
+      const today = new Date();
+      return aptDate.toDateString() === today.toDateString();
+    });
 
     res.send(`
       <!DOCTYPE html>
@@ -25,6 +28,10 @@ router.get('/:businessId', async (req, res) => {
           .header { background: #2563eb; color: white; padding: 20px; border-radius: 10px; }
           .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0; }
           .stat-card { background: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; }
+          .appointment-item { padding: 10px; border-bottom: 1px solid #eee; }
+          .status-confirmed { color: green; }
+          .status-pending { color: orange; }
+          .status-cancelled { color: red; }
         </style>
       </head>
       <body>
@@ -32,11 +39,11 @@ router.get('/:businessId', async (req, res) => {
           <h1>🏢 ${business.businessName}</h1>
           <p>Plan: ${business.plan} | Estado: ${business.status}</p>
         </div>
-        
+
         <div class="stats">
           <div class="stat-card">
             <h3>📅 Citas Hoy</h3>
-            <p>0</p>
+            <p>${todayAppointments.length}</p>
           </div>
           <div class="stat-card">
             <h3>👥 Total Citas</h3>
@@ -49,18 +56,28 @@ router.get('/:businessId', async (req, res) => {
         </div>
 
         <h2>Últimas Citas</h2>
-        <ul>
-          ${appointments.map(apt => `
-            <li>${apt.patientName} - ${apt.service} - ${new Date(apt.datetime).toLocaleDateString()}</li>
+        <div>
+          ${appointments.slice(0, 10).map(apt => `
+            <div class="appointment-item">
+              <strong>${apt.clientName}</strong> - ${apt.service} 
+              <span class="status-${apt.status}">(${apt.status})</span><br>
+              <small>${new Date(apt.dateTime).toLocaleDateString('es-MX')} ${new Date(apt.dateTime).toLocaleTimeString('es-MX')}</small>
+            </div>
           `).join('')}
-        </ul>
+        </div>
 
         <p><strong>WhatsApp:</strong> ${business.whatsappBusiness}</p>
         <p><strong>Email:</strong> ${business.contactEmail}</p>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px;">
+          <h3>📊 Dashboard Conectado al Bot</h3>
+          <p>Las citas mostradas son las reales agendadas por WhatsApp</p>
+        </div>
       </body>
       </html>
     `);
   } catch (error) {
+    console.error('Error en dashboard:', error);
     res.status(500).send('Error cargando dashboard');
   }
 });
