@@ -232,7 +232,7 @@ router.get('/', (req, res) => {
             const options = { month: 'short', day: 'numeric' };
             const startStr = startOfWeek.toLocaleDateString('es-MX', options);
             const endStr = endOfWeek.toLocaleDateString('es-MX', options);
-            currentWeekRange.textContent = `Semana del ${startStr} al ${endStr}`;
+            currentWeekRange.textContent = \`Semana del \${startStr} al \${endStr}\`;
             
             // Habilitar/Deshabilitar botón de semana anterior
             const startOfCurrentWeek = getStartOfWeek(new Date());
@@ -251,20 +251,20 @@ router.get('/', (req, res) => {
 
                 const dayBlock = document.createElement('div');
                 dayBlock.className = 'bg-white rounded-xl shadow-lg';
-                dayBlock.innerHTML = `
-                    <div class="day-header text-center ${i === 6 ? 'bg-purple-700' : ''}">
-                        ${dayName} ${dayDate.getDate()}
+                dayBlock.innerHTML = \`
+                    <div class="day-header \${i === 6 ? 'bg-purple-700' : ''}">
+                        \${dayName} \${dayDate.getDate()}
                     </div>
                     <div class="p-3">
-                        ${generateTimeSlots(i, dayDateString)}
+                        \${generateTimeSlots(i, dayDateString)}
                     </div>
-                `;
+                \`;
                 calendarGrid.appendChild(dayBlock);
             }
 
             // 4. Re-seleccionar el slot si existe
             if (selectedSlot) {
-                const currentSlotElement = document.querySelector(`[data-datetime="${selectedSlot.dateTime}"]`);
+                const currentSlotElement = document.querySelector(\`[data-datetime="\${selectedSlot.dateTime}"]\`);
                 if (currentSlotElement && currentSlotElement.dataset.disabled === 'false') {
                     currentSlotElement.classList.add('selected');
                     confirmBtn.disabled = false;
@@ -290,7 +290,7 @@ router.get('/', (req, res) => {
             };
             
             confirmBtn.disabled = false;
-            messageDiv.textContent = `Cita seleccionada: ${selectedSlot.date} a las ${selectedSlot.time}`;
+            messageDiv.textContent = \`Cita seleccionada: \${selectedSlot.date} a las \${selectedSlot.time}\`;
             messageDiv.className = 'mt-4 text-lg font-semibold text-blue-600';
         }
 
@@ -320,20 +320,20 @@ router.get('/', (req, res) => {
                 const result = await response.json();
                 
                 if (result.success) {
-                    messageDiv.textContent = `✅ ¡Cita Confirmada! Fecha: ${selectedSlot.date}, Hora: ${selectedSlot.time}.`;
+                    messageDiv.textContent = \`✅ ¡Cita Confirmada! Fecha: \${selectedSlot.date}, Hora: \${selectedSlot.time}.\`;
                     messageDiv.className = 'mt-4 text-xl font-bold text-green-700';
                     
                     confirmBtn.style.display = 'none'; 
                     document.querySelector('.calendar-grid').innerHTML = '<div class="col-span-full text-center p-10 text-2xl text-green-600">¡Cita Agendada! Recibirás la confirmación por WhatsApp.</div>';
                 } else {
-                    messageDiv.textContent = `❌ Error al agendar: ${result.error || 'Intente de nuevo.'}`;
+                    messageDiv.textContent = \`❌ Error al agendar: \${result.error || 'Intente de nuevo.'}\`;
                     messageDiv.className = 'mt-4 text-lg font-semibold text-red-600';
                     confirmBtn.disabled = false;
                     renderCalendar(); // Recargar el calendario si la reserva falló por disponibilidad
                 }
 
             } catch (error) {
-                messageDiv.textContent = `❌ Error de red: ${error.message}`;
+                messageDiv.textContent = \`❌ Error de red: \${error.message}\`;
                 messageDiv.className = 'mt-4 text-lg font-semibold text-red-600';
                 confirmBtn.disabled = false;
             }

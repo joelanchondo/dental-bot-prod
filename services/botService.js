@@ -91,6 +91,7 @@ async function handleAppointmentFlow(business, msg, phone, state) {
 
       // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---
       const clientPhone = phone.replace('whatsapp:', ''); // Limpiar el prefijo 'whatsapp:'
+const businessId = business._id ? business._id.toString() : 'MISSING_ID'; // Asegurar formato de cadena
       const BASE_URL = process.env.RENDER_URL; // Usar la variable de entorno de Render
       
       if (!BASE_URL) {
