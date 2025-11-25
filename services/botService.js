@@ -86,7 +86,9 @@ async function handleAppointmentFlow(business, msg, phone, state) {
       return `👋 Hola ${msg}! ¿Qué servicio necesitas?\n\n` + getServicesList(business);
 
     case 'get_service':
-      state.data.service = msg;
+      const serviceIndex = parseInt(msg) - 1;
+      const serviceName = business.services[serviceIndex]?.name || msg;
+      state.data.service = serviceName;
       ConversationManager.clearState(phone); // Finalizar el flujo de conversación
 
       // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---
