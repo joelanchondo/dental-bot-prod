@@ -179,3 +179,182 @@ router.get('/', (req, res) => {
     </html>
   `);
 });
+
+// GET /onboarding - Mostrar formulario de registro
+router.get('/', (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro - Dental Bot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">🦷 Registro Dental Bot</h1>
+            <p class="text-gray-600">Completa el formulario para activar tu bot de WhatsApp</p>
+        </div>
+
+        <form id="onboardingForm" class="space-y-6">
+            <!-- Información Básica -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de negocio *</label>
+                    <select name="Tipo de negocio" required class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="dental">Clínica Dental</option>
+                        <option value="medical">Consultorio Médico</option>
+                        <option value="beauty">Estética</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Plan *</label>
+                    <select name="plan" required class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500">
+                        <option value="basico">Básico</option>
+                        <option value="pro">Pro</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Nombre del Negocio -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre del negocio *</label>
+                <input type="text" name="Nombre del negocio" required 
+                    class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Ej: Sonrisa Perfecta Dental">
+            </div>
+
+            <!-- Información de Contacto -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">WhatsApp Business *</label>
+                    <input type="text" name="WhatsAppNegocio" required 
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="+521234567890">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Correo electrónico *</label>
+                    <input type="email" name="ContactoCorreo electrónico" required 
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="contacto@ejemplo.com">
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre del gerente/encargado *</label>
+                <input type="text" name="Nombre del gerente" required 
+                    class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Ej: María González">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre legal</label>
+                    <input type="text" name="nombre legal" 
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="Razón social">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">RFC</label>
+                    <input type="text" name="rfc" 
+                        class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="ABCD123456EFG">
+                </div>
+            </div>
+
+            <!-- Agente de Ventas -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Agente de ventas *</label>
+                <input type="text" name="Agente de ventas" required 
+                    class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Nombre del vendedor" value="joel anchondo">
+            </div>
+
+            <!-- Botón de Envío -->
+            <div class="flex justify-center">
+                <button type="submit" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200 flex items-center">
+                    <span>🚀 Activar Mi Bot</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="result" class="mt-6 hidden"></div>
+    </div>
+
+    <script>
+        document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const form = e.target;
+            const button = form.querySelector('button[type="submit"]');
+            const resultDiv = document.getElementById('result');
+            
+            // Recoger datos del formulario
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            // Agregar dirección por defecto
+            data.DIRECCIÓN = {
+                calle: 'Por definir',
+                ciudad: 'Por definir', 
+                estado: 'Por definir',
+                'Código postal': '00000'
+            };
+
+            button.disabled = true;
+            button.innerHTML = '⏳ Procesando...';
+
+            try {
+                const response = await fetch('/onboarding', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultDiv.className = 'p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg';
+                    resultDiv.innerHTML = \`
+                        <h3 class="font-bold">✅ ¡Registro Exitoso!</h3>
+                        <p>\${result.message}</p>
+                        <p class="mt-2"><strong>ID del negocio:</strong> \${result.businessId}</p>
+                        <a href="/dashboard/\${result.businessId}" class="inline-block mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                            Ver Dashboard
+                        </a>
+                    \`;
+                } else {
+                    resultDiv.className = 'p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg';
+                    resultDiv.innerHTML = \`
+                        <h3 class="font-bold">❌ Error en el registro</h3>
+                        <p>\${result.message}</p>
+                        \${result.errors ? '<ul class="mt-2 list-disc list-inside">' + result.errors.map(error => '<li>' + error + '</li>').join('') + '</ul>' : ''}
+                    \`;
+                }
+            } catch (error) {
+                resultDiv.className = 'p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg';
+                resultDiv.innerHTML = \`
+                    <h3 class="font-bold">❌ Error de conexión</h3>
+                    <p>No se pudo conectar con el servidor</p>
+                \`;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '🚀 Activar Mi Bot';
+                resultDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
+  `);
+});
