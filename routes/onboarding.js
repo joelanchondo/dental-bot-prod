@@ -121,3 +121,61 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /onboarding - Mostrar formulario
+router.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Onboarding - Dental Bot</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .form-group { margin: 15px 0; }
+            label { display: block; margin-bottom: 5px; font-weight: bold; }
+            input, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+            button { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        </style>
+    </head>
+    <body>
+        <h1>📋 Onboarding - Registrar Negocio</h1>
+        <form method="POST" action="/onboarding">
+            <div class="form-group">
+                <label>Tipo de negocio:</label>
+                <select name="Tipo de negocio" required>
+                    <option value="dental">Dental</option>
+                    <option value="medical">Médico</option>
+                    <option value="beauty">Belleza</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre del negocio:</label>
+                <input type="text" name="Nombre del negocio" required>
+            </div>
+            
+            <div class="form-group">
+                <label>WhatsApp Negocio:</label>
+                <input type="text" name="WhatsAppNegocio" placeholder="+521234567890" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Correo electrónico:</label>
+                <input type="email" name="ContactoCorreo electrónico" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Plan:</label>
+                <select name="plan" required>
+                    <option value="basico">Básico</option>
+                    <option value="pro">Pro</option>
+                    <option value="premium">Premium</option>
+                </select>
+            </div>
+            
+            <button type="submit">Registrar Negocio</button>
+        </form>
+    </body>
+    </html>
+  `);
+});
