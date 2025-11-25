@@ -5,9 +5,9 @@ const Business = require('../models/Business');
 // POST /onboarding - Procesar formulario de registro
 router.post('/', async (req, res) => {
   try {
-    console.log('🔍 [ONBOARDING] Body completo:', req.body);
+    console.log('🔍 [ONBOARDING] Body completo:', JSON.stringify(req.body, null, 2));
 
-    // MAPEO DE CAMPOS (español → inglés)
+    // MAPEO DE CAMPOS (español → inglés) con manejo de address como objeto
     const businessData = {
       businessType: req.body['Tipo de negocio'],
       businessName: req.body['Nombre del negocio'],
@@ -16,32 +16,31 @@ router.post('/', async (req, res) => {
       managerName: req.body['Nombre del gerente'],
       whatsappBusiness: req.body.WhatsAppNegocio,
       contactEmail: req.body['ContactoCorreo electrónico'],
-      address: req.body.DIRECCIÓN,
       plan: req.body.plan,
       salesAgent: req.body['Agente de ventas']
     };
 
+    // Manejar address que viene como objeto
+    if (req.body.DIRECCIÓN && typeof req.body.DIRECCIÓN === 'object') {
+      businessData.address = [
+        req.body.DIRECCIÓN.calle,
+        req.body.DIRECCIÓN.ciudad, 
+        req.body.DIRECCIÓN.estado,
+        req.body.DIRECCIÓN['Código postal']
+      ].filter(Boolean).join(', ');
+    } else {
+      businessData.address = 'Dirección no proporcionada';
+    }
+
     console.log('🔍 [ONBOARDING DEBUG] Datos mapeados:', businessData);
 
-    // VALIDACIONES
+    // VALIDACIONES BÁSICAS
     const errors = [];
-
     if (!businessData.businessType) errors.push('Tipo de negocio es requerido');
     if (!businessData.businessName) errors.push('Nombre comercial es requerido');
     if (!businessData.managerName) errors.push('Nombre del encargado es requerido');
     if (!businessData.whatsappBusiness) errors.push('WhatsApp Business es requerido');
     if (!businessData.contactEmail) errors.push('Correo electrónico es requerido');
-    if (!businessData.salesAgent) errors.push('Agente de ventas es requerido');
-
-    // Validar formato WhatsApp
-    if (businessData.whatsappBusiness && !businessData.whatsappBusiness.match(/^\+?[1-9]\d{1,14}$/)) {
-      errors.push('Formato de WhatsApp inválido. Ejemplo: +5215512345678');
-    }
-
-    // Validar email
-    if (businessData.contactEmail && !businessData.contactEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      errors.push('Formato de correo electrónico inválido');
-    }
 
     if (errors.length > 0) {
       console.log('❌ [ONBOARDING] Errores de validación:', errors);
@@ -52,114 +51,64 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // CONFIGURACIÓN POR PLAN
+    // CONFIGURACIÓN POR PLAN (simplificada)
     const planConfig = {
       basico: {
-        features: {
-          whatsappBot: true,
-          basicAppointments: true,
-          calendarAccess: false,
-          advancedReports: false,
-          customBranding: false
-        },
-        services: ['Consulta dental', 'Limpieza dental', 'Extracción simple'],
-        schedule: {
-          weekdays: '9:00 AM - 6:00 PM',
-          saturday: '9:00 AM - 2:00 PM',
-          sunday: 'Cerrado'
-        }
+        features: { whatsappBot: true, basicAppointments: true },
+        services: ['Consulta dental', 'Limpieza dental'],
+        schedule: { weekdays: '9:00-18:00', saturday: '9:00-14:00', sunday: 'Cerrado' }
       },
       pro: {
-        features: {
-          whatsappBot: true,
-          basicAppointments: true,
-          calendarAccess: true,
-          advancedReports: true,
-          customBranding: false
-        },
-        services: [
-          'Consulta dental', 'Limpieza dental', 'Extracción simple',
-          'Resina dental', 'Corona dental', 'Endodoncia'
-        ],
-        schedule: {
-          weekdays: '8:00 AM - 7:00 PM',
-          saturday: '9:00 AM - 3:00 PM',
-          sunday: '10:00 AM - 1:00 PM'
-        }
+        features: { whatsappBot: true, basicAppointments: true, calendarAccess: true },
+        services: ['Consulta', 'Limpieza', 'Extracción', 'Resina'],
+        schedule: { weekdays: '8:00-19:00', saturday: '9:00-15:00', sunday: '10:00-13:00' }
       },
       premium: {
-        features: {
-          whatsappBot: true,
-          basicAppointments: true,
-          calendarAccess: true,
-          advancedReports: true,
-          customBranding: true,
-          multiUser: true
-        },
-        services: [
-          'Consulta dental', 'Limpieza dental', 'Extracción simple',
-          'Resina dental', 'Corona dental', 'Endodoncia',
-          'Implante dental', 'Ortodoncia', 'Blanqueamiento'
-        ],
-        schedule: {
-          weekdays: '8:00 AM - 8:00 PM',
-          saturday: '9:00 AM - 4:00 PM',
-          sunday: '10:00 AM - 2:00 PM'
-        }
+        features: { whatsappBot: true, basicAppointments: true, calendarAccess: true, customBranding: true },
+        services: ['Consulta', 'Limpieza', 'Extracción', 'Resina', 'Corona', 'Implante'],
+        schedule: { weekdays: '8:00-20:00', saturday: '9:00-16:00', sunday: '10:00-14:00' }
       }
     };
 
     const config = planConfig[businessData.plan] || planConfig.basico;
 
-    // CREAR NEGOCIO
+    // CREAR NEGOCIO (solo campos esenciales)
     const business = new Business({
-      ...businessData,
+      businessType: businessData.businessType,
+      businessName: businessData.businessName,
+      legalName: businessData.legalName,
+      rfc: businessData.rfc,
+      managerName: businessData.managerName,
+      whatsappBusiness: businessData.whatsappBusiness,
+      contactEmail: businessData.contactEmail,
+      address: businessData.address,
+      plan: businessData.plan,
+      salesAgent: businessData.salesAgent,
       status: 'active',
       features: config.features,
       services: config.services,
-      schedule: config.schedule,
-      setupCompleted: true,
-      subscription: {
-        plan: businessData.plan,
-        status: 'active',
-        startDate: new Date(),
-        trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 días
-      }
+      schedule: config.schedule
     });
 
     await business.save();
-
-    console.log('✅ [ONBOARDING] Negocio creado exitosamente:', business._id);
+    console.log('✅ [ONBOARDING] Negocio creado:', business._id);
 
     res.json({
       success: true,
-      message: '¡Registro exitoso! Tu bot está siendo configurado.',
+      message: '¡Registro exitoso!',
       businessId: business._id,
-      nextSteps: [
-        'Configurar WhatsApp Business',
-        'Personalizar mensajes de bienvenida',
-        'Probar el flujo de citas'
-      ]
+      dashboardUrl: `/dashboard/${business._id}`
     });
 
   } catch (error) {
-    console.error('❌ [ONBOARDING] Error:', error);
-
-    // Manejar errores de MongoDB
+    console.error('❌ [ONBOARDING] Error completo:', error);
+    
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(e => e.message);
       return res.status(400).json({
         success: false,
-        message: 'Errores de validación en los datos',
+        message: 'Errores de validación',
         errors: validationErrors
-      });
-    }
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: 'El negocio ya está registrado',
-        errors: ['Ya existe un negocio con ese nombre o WhatsApp']
       });
     }
 
