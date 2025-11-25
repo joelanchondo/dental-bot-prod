@@ -47,6 +47,7 @@ app.use('/onboarding-dashboard', onboardingDashboardRoutes);
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/calendar-dashboard', calendarDashboardRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
