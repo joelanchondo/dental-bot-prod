@@ -16,10 +16,14 @@ router.post('/whatsapp', async (req, res) => {
     console.log('📱 MENSAJE RECIBIDO:', Body, 'de:', From, 'a:', To);
     
     // 🔍 BUSCAR NEGOCIO POR NÚMERO DE WHATSAPP
-    const toNumber = To?.replace('whatsapp:', '');
-    let business = await Business.findOne({ 
-      whatsappBusiness: { $regex: toNumber, $options: 'i' }
-    });
+    const toNumber = To?.replace('whatsapp:', '').replace('+', '');
+    let business = null;
+    
+    if (toNumber) {
+      business = await Business.findOne({ 
+        whatsappBusiness: { $regex: toNumber.slice(-10), $options: 'i' }
+      });
+    }
     
     // Si no se encuentra, usar el primero disponible (fallback)
     if (!business) {
