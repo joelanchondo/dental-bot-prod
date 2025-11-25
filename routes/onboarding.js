@@ -7,32 +7,44 @@ router.post('/', async (req, res) => {
   try {
     console.log('🔍 [ONBOARDING] Body completo:', JSON.stringify(req.body, null, 2));
 
-    // MAPEO DE CAMPOS (español → inglés)
+    // MAPEO DE CAMPOS - ACEPTA INGLÉS Y ESPAÑOL
     const businessData = {
-      businessType: req.body['Tipo de negocio'],
-      businessName: req.body['Nombre del negocio'],
-      legalName: req.body['nombre legal'] || req.body['Nombre del negocio'],
+      // Campos en español (formulario simple)
+      businessType: req.body['Tipo de negocio'] || req.body.businessType,
+      businessName: req.body['Nombre del negocio'] || req.body.businessName,
+      legalName: req.body['nombre legal'] || req.body.legalName,
       rfc: req.body.rfc || 'XAXX010101000',
-      managerName: req.body['Nombre del gerente'],
-      whatsappBusiness: req.body.WhatsAppNegocio,
-      contactEmail: req.body['ContactoCorreo electrónico'],
+      managerName: req.body['Nombre del gerente'] || req.body.managerName,
+      whatsappBusiness: req.body.WhatsAppNegocio || req.body.whatsappBusiness,
+      contactEmail: req.body['ContactoCorreo electrónico'] || req.body.contactEmail,
       plan: req.body.plan,
-      salesAgent: req.body['Agente de ventas'] || 'joel anchondo'
+      salesAgent: req.body['Agente de ventas'] || req.body.salesAgent || 'joel anchondo'
     };
 
-    // Manejar address
+    console.log('🔍 [ONBOARDING DEBUG] Campos mapeados:', businessData);
+
+    // Manejar address - ambos formatos
     if (req.body.DIRECCIÓN && typeof req.body.DIRECCIÓN === 'object') {
+      // Formato español
       businessData.address = [
         req.body.DIRECCIÓN.calle,
         req.body.DIRECCIÓN.ciudad, 
         req.body.DIRECCIÓN.estado,
         req.body.DIRECCIÓN['Código postal']
       ].filter(Boolean).join(', ');
+    } else if (req.body.address && typeof req.body.address === 'object') {
+      // Formato inglés
+      businessData.address = [
+        req.body.address.street,
+        req.body.address.city,
+        req.body.address.state, 
+        req.body.address.postalCode
+      ].filter(Boolean).join(', ');
     } else {
       businessData.address = 'Dirección por definir';
     }
 
-    console.log('🔍 [ONBOARDING DEBUG] Datos mapeados:', businessData);
+    console.log('🔍 [ONBOARDING DEBUG] Datos finales:', businessData);
 
     // VALIDACIONES BÁSICAS
     const errors = [];
@@ -86,7 +98,7 @@ router.post('/', async (req, res) => {
       salesAgent: businessData.salesAgent,
       status: 'active',
       features: config.features,
-      services: config.services,  // ✅ Ahora es array de objetos
+      services: config.services,
       schedule: config.schedule
     });
 
@@ -97,7 +109,8 @@ router.post('/', async (req, res) => {
       success: true,
       message: '¡Registro exitoso! Tu bot está siendo configurado.',
       businessId: business._id,
-      dashboardUrl: `/dashboard/${business._id}`
+      dashboardUrl: `/dashboard/${business._id}`,
+      whatsappUrl: `https://wa.me/${businessData.whatsappBusiness.replace('+', '')}`
     });
 
   } catch (error) {
