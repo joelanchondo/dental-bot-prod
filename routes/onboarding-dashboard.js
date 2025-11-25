@@ -303,7 +303,7 @@ router.get('/', (req, res) => {
             };
 
             try {
-                const response = await fetch('/api/onboarding/create', {
+                const response = await fetch('/api/onboarding', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
