@@ -94,11 +94,13 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // Ruta admin dashboard
+
+// Ruta admin dashboard
 app.get('/admin', async (req, res) => {
   try {
     const Business = require('./models/Business');
     const businesses = await Business.find().sort({ createdAt: -1 });
-    
+
     let businessList = '';
     businesses.forEach(business => {
       businessList += `
@@ -113,7 +115,7 @@ app.get('/admin', async (req, res) => {
           </div>
         </div>`;
     });
-    
+
     res.send(`
 <!DOCTYPE html>
 <html>
@@ -134,7 +136,7 @@ app.get('/admin', async (req, res) => {
         <h1>⚙️ Admin Dashboard</h1>
         <p>Gestión de Clientes</p>
     </div>
-    
+
     <div class="business-list">
         <h2>📋 Clientes (${businesses.length})</h2>
         ${businessList}
@@ -160,10 +162,28 @@ app.get('/admin', async (req, res) => {
     res.status(500).send('Error: ' + error.message);
   }
 });
-</body>
-</html>
-    \`);
-  } catch (error) {
-    res.status(500).send('Error: ' + error.message);
-  }
+
+// Manejo de errores 404
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'Ruta no encontrada',
+    path: req.originalUrl,
+    method: req.method,
+    availableEndpoints: {
+      health: '/health',
+      onboarding: '/onboarding',
+      dashboard: '/dashboard/:businessId',
+      admin: '/admin'
+    }
+  });
+});
+
+// Iniciar servidor
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📍 Local URL: http://localhost:${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🚀 Onboarding: http://localhost:${PORT}/onboarding`);
+  console.log(`👑 Admin: http://localhost:${PORT}/admin`);
 });
