@@ -65,35 +65,11 @@ app.get('/', (req, res) => {
       health: '/health',
       onboarding: '/onboarding',
       dashboard: '/dashboard/:businessId',
-      webhook: '/webhook'
+      webhook: '/webhook',
+      admin: '/admin'
     }
   });
 });
-
-// Manejo de errores 404
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Ruta no encontrada',
-    path: req.originalUrl,
-    method: req.method,
-    availableEndpoints: {
-      health: '/health',
-      onboarding: '/onboarding',
-      dashboard: '/dashboard/:businessId'
-    }
-  });
-});
-
-// Iniciar servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📍 Local URL: http://localhost:${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`🚀 Onboarding: http://localhost:${PORT}/onboarding`);
-});
-
-// Ruta admin dashboard
 
 // Ruta admin dashboard
 app.get('/admin', async (req, res) => {
