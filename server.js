@@ -38,11 +38,14 @@ const onboardingRoutes = require('./routes/onboarding');
 const onboardingDashboardRoutes = require('./routes/onboarding-dashboard');
 const dashboardRoutes = require('./routes/dashboard');
 
-// Registrar rutas
+// Registrar rutas PRINCIPALES primero
+app.use('/onboarding', onboardingRoutes);  // ✅ ESTA ES LA IMPORTANTE
+app.use('/api/onboarding', onboardingRoutes);
+app.use('/onboarding-dashboard', onboardingDashboardRoutes);
+
+// Otras rutas
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/onboarding', onboardingRoutes);
-app.use('/onboarding', onboardingDashboardRoutes);
 app.use('/dashboard', dashboardRoutes);
 
 // Health check
