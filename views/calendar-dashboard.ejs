@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 Calendario de Citas - <%= business.businessName %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+        }
+        
+        .plan-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        
+        .plan-badge.premium {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .stat-card.confirmed h3 { color: #10b981; }
+        .stat-card.pending h3 { color: #f59e0b; }
+        .stat-card.completed h3 { color: #3b82f6; }
+        .stat-card.cancelled h3 { color: #ef4444; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .today-appointments {
+            margin-bottom: 30px;
+        }
+        
+        .appointment-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .appointment-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .appointment-item.confirmed { border-left-color: #10b981; }
+        .appointment-item.pending { border-left-color: #f59e0b; }
+        .appointment-item.cancelled { border-left-color: #ef4444; }
+        
+        .appointment-time {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .appointment-client {
+            font-size: 14px;
+            color: #111827;
+            margin-bottom: 3px;
+        }
+        
+        .appointment-service {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .calendar-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        
+        /* Botón flotante */
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 999;
+            transition: transform 0.3s;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Modales */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            max-width: 600px;
+            width: 90%;
+            margin: 50px auto;
+            border-radius: 15px;
+            padding: 30px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>📅 <%= business.businessName %></h1>
+                <p style="color: #6b7280; margin-top: 5px;">Calendario de Citas</p>
+            </div>
+            <div class="plan-badge <%= business.plan === 'premium' ? 'premium' : '' %>">
+                Plan <%= business.plan.toUpperCase() %>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><%= stats.total %></h3>
+                <p>Total del Mes</p>
+            </div>
+            <div class="stat-card confirmed">
+                <h3><%= stats.confirmed %></h3>
+                <p>Confirmadas</p>
+            </div>
+            <div class="stat-card pending">
+                <h3><%= stats.pending %></h3>
+                <p>Pendientes</p>
+            </div>
+            <div class="stat-card completed">
+                <h3><%= stats.completed %></h3>
+                <p>Completadas</p>
+            </div>
+            <div class="stat-card cancelled">
+                <h3><%= stats.cancelled %></h3>
+                <p>Canceladas</p>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Search -->
+                <input type="text" class="search-box" placeholder="🔍 Buscar citas..." id="searchBox">
+                
+                <!-- Today's Appointments -->
+                <div class="today-appointments">
+                    <h2>📌 Citas de Hoy (<%= todayAppointments.length %>)</h2>
+                    <% if (todayAppointments.length > 0) { %>
+                        <% todayAppointments.forEach(apt => { %>
+                            <div class="appointment-item <%= apt.status %>" 
+                                 data-appointment-id="<%= apt._id %>"
+                                 onclick="showAppointmentDetails('<%= apt._id %>')">
+                                <div class="appointment-time">
+                                    <%= new Date(apt.dateTime).toLocaleTimeString('es-MX', {hour: '2-digit', minute:'2-digit'}) %>
+                                </div>
+                                <div class="appointment-client"><%= apt.clientName %></div>
+                                <div class="appointment-service"><%= apt.service %></div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="empty-state">
+                            <p>No hay citas para hoy</p>
+                        </div>
+                    <% } %>
+                </div>
+                
+                <!-- Upcoming Appointments -->
+                <div>
+                    <h2>🔜 Próximas 7 Días (<%= upcomingAppointments.length %>)</h2>
+                    <% if (upcomingAppointments.length > 0) { %>
+                        <% upcomingAppointments.forEach(apt => { %>
+                            <div class="appointment-item <%= apt.status %>" 
+                                 data-appointment-id="<%= apt._id %>"
+                                 onclick="showAppointmentDetails('<%= apt._id %>')">
+                                <div class="appointment-time">
+                                    <%= new Date(apt.dateTime).toLocaleDateString('es-MX', {weekday: 'short', day: 'numeric', month: 'short'}) %>
+                                    <%= new Date(apt.dateTime).toLocaleTimeString('es-MX', {hour: '2-digit', minute:'2-digit'}) %>
+                                </div>
+                                <div class="appointment-client"><%= apt.clientName %></div>
+                                <div class="appointment-service"><%= apt.service %></div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <div class="empty-state">
+                            <p>No hay próximas citas</p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <!-- Calendar -->
+            <div class="calendar-container">
+                <h2>Calendario Mensual</h2>
+                <p style="color: #6b7280; margin-bottom: 20px;"><%= currentMonth %></p>
+                <!-- Aquí iría el calendario si lo necesitas -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Detalles de Cita -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #667eea; margin: 0;">Detalles de la Cita</h2>
+                <button onclick="closeAppointmentModal()" style="background: none; border: none; font-size: 32px; cursor: pointer; color: #6b7280;">&times;</button>
+            </div>
+            <div id="appointmentDetails"></div>
+        </div>
+    </div>
+    
+    <!-- Modal Nueva Cita -->
+    <div id="newAppointmentModal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #667eea; margin-bottom: 20px;">🚨 Nueva Cita (Urgencia)</h2>
+            <form id="newAppointmentForm">
+                <div class="form-group">
+                    <label>Nombre del Paciente *</label>
+                    <input type="text" name="clientName" required>
+                </div>
+                <div class="form-group">
+                    <label>Teléfono *</label>
+                    <input type="tel" name="clientPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Servicio *</label>
+                    <select name="service" required>
+                        <% business.services.forEach(service => { %>
+                            <option value="<%= service.name %>"><%= service.name %> - $<%= service.price %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha y Hora *</label>
+                    <input type="datetime-local" name="dateTime" required>
+                </div>
+                <div class="form-group">
+                    <label>Notas</label>
+                    <textarea name="notes" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-bottom: 10px;">Crear Cita</button>
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="closeNewAppointmentModal()">Cancelar</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Botón Flotante -->
+    <button class="fab" onclick="openNewAppointmentModal()">➕</button>
+    
+    <script>
+        const businessId = '<%= business._id %>';
+        
+        async function showAppointmentDetails(appointmentId) {
+            try {
+                const response = await fetch(`/dashboard/api/appointment/${appointmentId}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert('Error al cargar detalles');
+                    return;
+                }
+                
+                const apt = data.appointment;
+                const statusColors = {
+                    pending: '#f59e0b',
+                    confirmed: '#10b981',
+                    completed: '#3b82f6',
+                    cancelled: '#ef4444',
+                    'no-show': '#9ca3af'
+                };
+                
+                document.getElementById('appointmentDetails').innerHTML = `
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 15px;">${apt.clientName}</h3>
+                        <p><strong>📞 Teléfono:</strong> ${apt.clientPhone}</p>
+                        ${apt.clientEmail ? `<p><strong>📧 Email:</strong> ${apt.clientEmail}</p>` : ''}
+                        <p><strong>💼 Servicio:</strong> ${apt.service}</p>
+                        <p><strong>📅 Fecha:</strong> ${new Date(apt.dateTime).toLocaleString('es-MX')}</p>
+                        <p><strong>⏱️ Duración:</strong> ${apt.duration} minutos</p>
+                        <p><strong>Estado:</strong> <span style="color: ${statusColors[apt.status]}; font-weight: bold;">${apt.status.toUpperCase()}</span></p>
+                        ${apt.notes ? `<p><strong>📝 Notas:</strong> ${apt.notes}</p>` : ''}
+                        ${apt.internalNotes ? `<p><strong>🔒 Notas Internas:</strong> ${apt.internalNotes}</p>` : ''}
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Notas Internas</label>
+                        <textarea id="internalNotesInput" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px;" rows="3">${apt.internalNotes || ''}</textarea>
+                        <button onclick="saveNotes('${apt.id}')" class="btn btn-primary" style="margin-top: 10px;">Guardar Notas</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        ${apt.status === 'pending' ? `
+                            <button onclick="updateStatus('${apt.id}', 'confirmed')" class="btn btn-success">✅ Confirmar</button>
+                        ` : ''}
+                        ${apt.status === 'confirmed' ? `
+                            <button onclick="updateStatus('${apt.id}', 'completed')" class="btn btn-primary">✔️ Completar</button>
+                        ` : ''}
+                        ${apt.status !== 'cancelled' && apt.status !== 'completed' ? `
+                            <button onclick="updateStatus('${apt.id}', 'cancelled')" class="btn btn-danger">❌ Cancelar</button>
+                            <button onclick="updateStatus('${apt.id}', 'no-show')" class="btn btn-secondary">🚫 No Show</button>
+                        ` : ''}
+                        <button onclick="sendReminder('${apt.id}')" class="btn btn-warning">📱 Recordatorio</button>
+                    </div>
+                `;
+                
+                document.getElementById('appointmentModal').classList.add('active');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar detalles');
+            }
+        }
+        
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').classList.remove('active');
+        }
+        
+        async function updateStatus(appointmentId, newStatus) {
+            if (!confirm(`¿Cambiar estado a ${newStatus}?`)) return;
+            
+            try {
+                const response = await fetch(`/dashboard/api/appointment/${appointmentId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Estado actualizado correctamente');
+                    location.reload();
+                } else {
+                    alert('Error al actualizar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al actualizar');
+            }
+        }
+        
+        async function saveNotes(appointmentId) {
+            const notes = document.getElementById('internalNotesInput').value;
+            
+            try {
+                const response = await fetch(`/dashboard/api/appointment/${appointmentId}/notes`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ internalNotes: notes })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Notas guardadas');
+                } else {
+                    alert('Error al guardar');
+                }
+            } catch (error) {
+                alert('Error al guardar');
+            }
+        }
+        
+        async function sendReminder(appointmentId) {
+            if (!confirm('¿Enviar recordatorio?')) return;
+            
+            try {
+                const response = await fetch(`/dashboard/api/appointment/${appointmentId}/send-reminder`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                alert(data.success ? 'Recordatorio enviado' : 'Error');
+            } catch (error) {
+                alert('Error');
+            }
+        }
+        
+        function openNewAppointmentModal() {
+            document.getElementById('newAppointmentModal').classList.add('active');
+        }
+        
+        function closeNewAppointmentModal() {
+            document.getElementById('newAppointmentModal').classList.remove('active');
+        }
+        
+        document.getElementById('newAppointmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                businessId: businessId,
+                clientName: formData.get('clientName'),
+                clientPhone: formData.get('clientPhone'),
+                service: formData.get('service'),
+                dateTime: formData.get('dateTime'),
+                notes: formData.get('notes')
+            };
+            
+            try {
+                const response = await fetch('/dashboard/api/appointment/new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Cita creada');
+                    location.reload();
+                } else {
+                    alert('Error al crear');
+                }
+            } catch (error) {
+                alert('Error');
+            }
+        });
+        
+        // Cerrar modales al hacer click fuera
+        document.getElementById('appointmentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAppointmentModal();
+        });
+        
+        document.getElementById('newAppointmentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeNewAppointmentModal();
+        });
+    </script>
+</body>
+</html>
