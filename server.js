@@ -37,6 +37,7 @@ const adminRoutes = require('./routes/admin');
 const onboardingRoutes = require('./routes/onboarding');
 const onboardingDashboardRoutes = require('./routes/onboarding-dashboard');
 const dashboardRoutes = require('./routes/dashboard');
+const calendarDashboardRoutes = require('./routes/calendar-dashboard');  // Ruta del Dashboard de Citas
 
 // Registrar rutas PRINCIPALES primero
 app.use('/onboarding', onboardingRoutes);  // ✅ ESTA ES LA IMPORTANTE
