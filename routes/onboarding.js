@@ -358,3 +358,90 @@ router.get('/', (req, res) => {
 </html>
   `);
 });
+
+// GET /onboarding - Mostrar formulario básico
+router.get('/', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Onboarding - Dental Bot</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .form-group { margin: 15px 0; }
+            label { display: block; margin-bottom: 5px; font-weight: bold; }
+            input, select { width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+            button { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+            .required { color: red; }
+        </style>
+    </head>
+    <body>
+        <h1>📋 Onboarding - Registrar Negocio</h1>
+        <form method="POST" action="/onboarding">
+            <div class="form-group">
+                <label>Tipo de negocio: <span class="required">*</span></label>
+                <select name="Tipo de negocio" required>
+                    <option value="dental">Dental</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre del negocio: <span class="required">*</span></label>
+                <input type="text" name="Nombre del negocio" required>
+            </div>
+
+            <div class="form-group">
+                <label>Nombre legal:</label>
+                <input type="text" name="nombre legal" placeholder="Razón social">
+            </div>
+
+            <div class="form-group">
+                <label>RFC:</label>
+                <input type="text" name="rfc" placeholder="ABCD123456EFG">
+            </div>
+            
+            <div class="form-group">
+                <label>Nombre del gerente: <span class="required">*</span></label>
+                <input type="text" name="Nombre del gerente" required placeholder="Ej: María González">
+            </div>
+            
+            <div class="form-group">
+                <label>WhatsApp Negocio: <span class="required">*</span></label>
+                <input type="text" name="WhatsAppNegocio" placeholder="+526141234567" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Correo electrónico: <span class="required">*</span></label>
+                <input type="email" name="ContactoCorreo electrónico" required>
+            </div>
+
+            <!-- Campos de dirección ocultos con valores por defecto -->
+            <input type="hidden" name="DIRECCIÓN[calle]" value="Por definir">
+            <input type="hidden" name="DIRECCIÓN[ciudad]" value="Por definir">
+            <input type="hidden" name="DIRECCIÓN[estado]" value="Por definir">
+            <input type="hidden" name="DIRECCIÓN[Código postal]" value="00000">
+            
+            <div class="form-group">
+                <label>Plan: <span class="required">*</span></label>
+                <select name="plan" required>
+                    <option value="basico">Básico</option>
+                    <option value="pro">Pro</option>
+                    <option value="premium">Premium</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Agente de ventas: <span class="required">*</span></label>
+                <input type="text" name="Agente de ventas" value="joel anchondo" required>
+            </div>
+            
+            <button type="submit">Registrar Negocio</button>
+        </form>
+
+        <div style="margin-top: 20px; padding: 10px; background: #f0f9ff; border-radius: 5px;">
+            <p><strong>Nota:</strong> Los campos marcados con <span class="required">*</span> son obligatorios.</p>
+        </div>
+    </body>
+    </html>
+  `);
+});
