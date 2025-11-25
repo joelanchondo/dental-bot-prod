@@ -96,9 +96,25 @@ app.listen(PORT, '0.0.0.0', () => {
 // Ruta admin dashboard
 app.get('/admin', async (req, res) => {
   try {
-    const businesses = await require('./models/Business').find().sort({ createdAt: -1 });
+    const Business = require('./models/Business');
+    const businesses = await Business.find().sort({ createdAt: -1 });
     
-    res.send(\`
+    let businessList = '';
+    businesses.forEach(business => {
+      businessList += `
+        <div class="business-item">
+          <div>
+            <strong>${business.businessName}</strong><br>
+            <small>Plan: ${business.plan} | ${new Date(business.createdAt).toLocaleDateString('es-MX')}</small>
+          </div>
+          <div>
+            <a href="/dashboard/${business._id}" target="_blank" class="btn btn-view">Ver</a>
+            <button class="btn btn-delete" onclick="deleteBusiness('${business._id}')">Eliminar</button>
+          </div>
+        </div>`;
+    });
+    
+    res.send(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -120,19 +136,8 @@ app.get('/admin', async (req, res) => {
     </div>
     
     <div class="business-list">
-        <h2>📋 Clientes (\${businesses.length})</h2>
-        \${businesses.map(business => \`
-            <div class="business-item">
-                <div>
-                    <strong>\${business.businessName}</strong><br>
-                    <small>Plan: \${business.plan} | \${new Date(business.createdAt).toLocaleDateString('es-MX')}</small>
-                </div>
-                <div>
-                    <a href="/dashboard/\${business._id}" target="_blank" class="btn btn-view">Ver</a>
-                    <button class="btn btn-delete" onclick="deleteBusiness('\${business._id}')">Eliminar</button>
-                </div>
-            </div>
-        \`).join('')}
+        <h2>📋 Clientes (${businesses.length})</h2>
+        ${businessList}
     </div>
 
     <script>
@@ -148,6 +153,13 @@ app.get('/admin', async (req, res) => {
             }
         }
     </script>
+</body>
+</html>
+    `);
+  } catch (error) {
+    res.status(500).send('Error: ' + error.message);
+  }
+});
 </body>
 </html>
     \`);
