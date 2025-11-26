@@ -23,12 +23,14 @@ router.post('/whatsapp', async (req, res) => {
 
     // 🔍 BUSCAR NEGOCIO POR NÚMERO DE WHATSAPP
     const toNumber = To?.replace('whatsapp:', '').replace('+', '');
+
+    console.log("🔍 NÚMERO RECIBIDO EXACTO:", To, "toNumber:", toNumber);
     let business = null;
 
     // DETECTAR TIPO DE BOT SEGÚN NÚMERO Y PLAN
     let botProcessor;
 
-    if (toNumber === '+14155238886') {
+    if (toNumber.includes('14155238886')) {
       // 🎭 BOT DEMO (número Twilio fijo)
       console.log('🎭 Usando BOT DEMO');
       botProcessor = botDemo.processBotMessage;
