@@ -28,7 +28,7 @@ router.post('/whatsapp', async (req, res) => {
     // DETECTAR TIPO DE BOT SEGÚN NÚMERO Y PLAN
     let botProcessor;
 
-    if (toNumber === '14155238886') {
+    if (toNumber === '+14155238886') {
       // 🎭 BOT DEMO (número Twilio fijo)
       console.log('🎭 Usando BOT DEMO');
       botProcessor = botDemo.processBotMessage;
