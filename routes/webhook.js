@@ -40,7 +40,7 @@ router.post('/whatsapp', async (req, res) => {
         businessType: "dental",
         plan: "demo",
         whatsappBusiness: "+14155238886",
-        _id: "demo-id"
+        _id: "6925da1ba0579edd59ed7aec"
       };
     } else {
       // Buscar negocio real en MongoDB
