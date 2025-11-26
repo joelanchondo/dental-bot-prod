@@ -49,6 +49,7 @@ app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/calendar-dashboard', calendarDashboardRoutes);
+app.use('/api/appointments', require('./routes/appointments-api'));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -170,4 +171,3 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // Agregar ruta calendar-dashboard (antes del 404)
-app.use('/calendar-dashboard', onboardingDashboardRoutes);

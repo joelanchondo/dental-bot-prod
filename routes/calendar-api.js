@@ -45,6 +45,15 @@ router.post('/save-appointment', async (req, res) => {
         });
 
         await newAppointment.save();
+
+  // Enviar confirmación por WhatsApp
+  try {
+    const twilioService = require("../services/twilioService");
+    await twilioService.sendAppointmentConfirmation(newAppointment);
+    console.log("✅ Confirmación WhatsApp enviada para cita:", newAppointment._id);
+  } catch (error) {
+    console.error("❌ Error enviando WhatsApp:", error.message);
+  }
         
         // [PENDIENTE] Aquí se integraría la sincronización con Google Calendar
         // if (business.googleCalendarEnabled) {

@@ -86,9 +86,7 @@ async function handleAppointmentFlow(business, msg, phone, state) {
       return `👋 Hola ${msg}! ¿Qué servicio necesitas?\n\n` + getServicesList(business);
 
     case 'get_service':
-      const serviceIndex = parseInt(msg) - 1;
-      const serviceName = business.services[serviceIndex]?.name || msg;
-      state.data.service = serviceName;
+      state.data.service = msg;
       ConversationManager.clearState(phone); // Finalizar el flujo de conversación
 
       // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---
@@ -102,10 +100,6 @@ const businessId = business._id ? business._id.toString() : 'MISSING_ID'; // Ase
       }
 
       const calendarUrl = `${BASE_URL}/calendar-dashboard?` +
-        `businessId=6924f324cd054333d535c232&` +
-        `clientName=${encodeURIComponent(clientName)}&` +
-        `service=${encodeURIComponent(service)}&` +
-        `phone=${encodeURIComponent(phone)}`;
                           `businessId=${business._id}` +
                           `&clientName=${encodeURIComponent(state.data.name)}` +
                           `&service=${encodeURIComponent(state.data.service)}` +

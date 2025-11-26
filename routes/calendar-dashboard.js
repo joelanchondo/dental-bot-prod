@@ -4,7 +4,7 @@ const Business = require('../models/Business');
 const Appointment = require('../models/Appointment');
 const moment = require('moment');
 
-// GET /calendar-dashboard - Calendario con datos demo
+// GET /calendar-dashboard - Calendario FUNCIONAL
 router.get('/', async (req, res) => {
   try {
     const { businessId, clientName, service, phone } = req.query;
@@ -15,35 +15,13 @@ router.get('/', async (req, res) => {
       return res.status(400).send('❌ Error: businessId es requerido');
     }
 
-    // Intentar cargar negocio real, si no existe usar demo
+    // Cargar negocio real
     let business = await Business.findById(businessId);
-    
     if (!business) {
-      console.log('⚠️ Negocio no encontrado en BD, usando datos DEMO');
-      business = {
-        _id: businessId,
-        businessName: "🦷 Clínica Dental Demo",
-        businessHours: {
-          monday: { open: '09:00', close: '18:00', active: true },
-          tuesday: { open: '09:00', close: '18:00', active: true },
-          wednesday: { open: '09:00', close: '18:00', active: true },
-          thursday: { open: '09:00', close: '18:00', active: true },
-          friday: { open: '09:00', close: '18:00', active: true },
-          saturday: { open: '10:00', close: '14:00', active: true },
-          sunday: { open: '00:00', close: '00:00', active: false }
-        },
-        services: [
-          { name: 'Limpieza Dental', duration: 30, price: 500 },
-          { name: 'Revisión General', duration: 20, price: 300 },
-          { name: 'Blanqueamiento', duration: 60, price: 2000 }
-        ]
-      };
+      return res.status(404).send('❌ Negocio no encontrado');
     }
 
     console.log('✅ Negocio cargado:', business.businessName);
-
-    // Obtener citas existentes (vacío para demo)
-    const existingAppointments = [];
 
     res.send(`
 <!DOCTYPE html>
@@ -53,7 +31,8 @@ router.get('/', async (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calendario - ${business.businessName}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/moment@2.29.4/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/es.js"></script>
     <style>
         .calendar-day { cursor: pointer; transition: all 0.2s; }
         .calendar-day:hover:not(.disabled) { background-color: #3b82f6; color: white; }
@@ -70,7 +49,7 @@ router.get('/', async (req, res) => {
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-gray-800">📅 ${business.businessName}</h1>
-            <p class="text-green-600 font-bold">🚀 MODO DEMO - FUNCIONANDO</p>
+            <p class="text-green-600 font-bold">✅ CALENDARIO FUNCIONAL</p>
             <p class="text-gray-600">Selecciona fecha y hora para tu cita</p>
         </div>
 
@@ -78,91 +57,197 @@ router.get('/', async (req, res) => {
         <div class="mb-6 p-4 bg-blue-50 rounded-lg">
             <h3 class="font-bold text-lg mb-2">Resumen de la cita:</h3>
             <div class="grid grid-cols-2 gap-2">
-                <p><strong>Paciente:</strong> ${clientName || 'Joel Anchondo'}</p>
-                <p><strong>Servicio:</strong> ${service || 'Limpieza Dental'}</p>
-                <p><strong>Teléfono:</strong> ${phone || '+5216143718812'}</p>
+                <p><strong>Paciente:</strong> ${clientName || 'No especificado'}</p>
+                <p><strong>Servicio:</strong> ${service || 'No especificado'}</p>
+                <p><strong>Teléfono:</strong> ${phone || 'No especificado'}</p>
                 <p><strong>Negocio:</strong> ${business.businessName}</p>
             </div>
         </div>
 
-        <!-- Calendario Interactivo -->
+        <!-- Calendario Interactivo REAL -->
         <div id="calendar-section">
             <div class="flex justify-between items-center mb-4">
-                <button onclick="previousMonth()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">←</button>
-                <h2 id="current-month" class="text-xl font-bold text-gray-800">Diciembre 2025</h2>
-                <button onclick="nextMonth()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">→</button>
+                <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">←</button>
+                <h2 id="current-month" class="text-xl font-bold text-gray-800">Cargando...</h2>
+                <button onclick="changeMonth(1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">→</button>
             </div>
-            
-            <!-- Calendario mensual -->
-            <div class="grid grid-cols-7 gap-2 mb-4">
-                <!-- Días de la semana -->
-                <div class="text-center font-bold p-2">Dom</div>
-                <div class="text-center font-bold p-2">Lun</div>
-                <div class="text-center font-bold p-2">Mar</div>
-                <div class="text-center font-bold p-2">Mié</div>
-                <div class="text-center font-bold p-2">Jue</div>
-                <div class="text-center font-bold p-2">Vie</div>
-                <div class="text-center font-bold p-2">Sáb</div>
-                
-                <!-- Días del mes (ejemplo) -->
-                ${Array.from({length: 35}, (_, i) => {
-                  const day = i - 2; // Empezar desde día 1
-                  if (day <= 0 || day > 31) {
-                    return '<div class="text-center p-2 text-gray-300"> </div>';
-                  }
-                  const isAvailable = day % 2 === 0; // Días pares disponibles
-                  return `
-                    <div class="text-center p-2 rounded-lg border ${
-                      isAvailable 
-                        ? 'calendar-day bg-blue-100 hover:bg-blue-200' 
-                        : 'disabled bg-gray-100'
-                    }" onclick="${isAvailable ? 'selectDate(' + day + ')' : ''}">
-                      ${day}
-                    </div>
-                  `;
-                }).join('')}
+
+            <div class="grid grid-cols-7 gap-2 mb-4" id="calendar-days">
+                <!-- Días se cargan con JavaScript -->
             </div>
         </div>
 
-        <!-- Horarios (aparece al seleccionar fecha) -->
+        <!-- Horarios -->
         <div id="time-slots-section" class="hidden">
-            <h3 class="text-xl font-bold mb-4">Horarios disponibles</h3>
-            <div class="grid grid-cols-4 gap-2 mb-4">
-                <div class="time-slot text-center p-3 bg-blue-100 rounded-lg border hover:bg-blue-200" onclick="selectTime('09:00')">09:00</div>
-                <div class="time-slot text-center p-3 bg-blue-100 rounded-lg border hover:bg-blue-200" onclick="selectTime('10:00')">10:00</div>
-                <div class="time-slot text-center p-3 bg-blue-100 rounded-lg border hover:bg-blue-200" onclick="selectTime('11:00')">11:00</div>
-                <div class="time-slot text-center p-3 bg-blue-100 rounded-lg border hover:bg-blue-200" onclick="selectTime('12:00')">12:00</div>
+            <h3 class="text-xl font-bold mb-4">Horarios disponibles para <span id="selected-date"></span></h3>
+            <div class="grid grid-cols-4 gap-2 mb-4" id="time-slots">
+                <!-- Horarios se cargan dinámicamente -->
             </div>
         </div>
 
         <!-- Confirmación -->
         <div id="confirmation-section" class="hidden p-4 bg-green-50 rounded-lg">
             <h3 class="text-xl font-bold mb-4">✅ Cita Confirmada</h3>
-            <p>Tu cita ha sido agendada exitosamente.</p>
-            <p class="text-sm text-gray-600 mt-2">Recibirás un mensaje de confirmación por WhatsApp.</p>
+            <p id="confirmation-message">Tu cita ha sido agendada exitosamente.</p>
+            <button onclick="closeWindow()" class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                ✅ Cerrar y volver a WhatsApp
+            </button>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-section" class="hidden text-center p-8">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2">Guardando cita...</p>
         </div>
     </div>
 
     <script>
-        function selectDate(day) {
+        let currentDate = moment();
+        let selectedDate = null;
+        let selectedTime = null;
+        const businessId = '${businessId}';
+        const clientName = '${clientName || ''}';
+        const service = '${service || ''}';
+        const phone = '${phone || ''}';
+
+        // Inicializar calendario
+        document.addEventListener('DOMContentLoaded', function() {
+            moment.locale('es');
+            renderCalendar();
+        });
+
+        function renderCalendar() {
+            const monthYear = currentDate.format('MMMM YYYY');
+            document.getElementById('current-month').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
+            
+            const calendarDays = document.getElementById('calendar-days');
+            calendarDays.innerHTML = '';
+            
+            // Días de la semana
+            ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'text-center font-bold p-2';
+                dayElement.textContent = day;
+                calendarDays.appendChild(dayElement);
+            });
+            
+            // Días del mes
+            const startOfMonth = currentDate.clone().startOf('month');
+            const endOfMonth = currentDate.clone().endOf('month');
+            const startDay = startOfMonth.day();
+            const daysInMonth = endOfMonth.date();
+            
+            // Días vacíos al inicio
+            for (let i = 0; i < startDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'text-center p-2 text-gray-300';
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Días del mes
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                const date = currentDate.clone().date(day);
+                const isPast = date.isBefore(moment(), 'day');
+                const isAvailable = !isPast && date.day() !== 0; // No domingos
+                
+                dayElement.className = \`text-center p-2 rounded-lg border \${
+                    isAvailable 
+                        ? 'calendar-day bg-blue-100 hover:bg-blue-200 cursor-pointer' 
+                        : 'disabled bg-gray-100 cursor-not-allowed'
+                }\`;
+                dayElement.textContent = day;
+                
+                if (isAvailable) {
+                    dayElement.onclick = () => selectDate(date.format('YYYY-MM-DD'));
+                }
+                
+                calendarDays.appendChild(dayElement);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentDate.add(direction, 'month');
+            renderCalendar();
+        }
+
+        function selectDate(date) {
+            selectedDate = date;
+            document.getElementById('selected-date').textContent = moment(date).format('DD [de] MMMM [de] YYYY');
             document.getElementById('time-slots-section').classList.remove('hidden');
-            document.getElementById('current-month').textContent = \`Seleccionado: Diciembre \${day}, 2025\`;
+            
+            // Generar horarios disponibles (9:00 - 17:00)
+            const timeSlots = document.getElementById('time-slots');
+            timeSlots.innerHTML = '';
+            
+            for (let hour = 9; hour <= 17; hour++) {
+                const time = \`\${hour.toString().padStart(2, '0')}:00\`;
+                const timeElement = document.createElement('div');
+                timeElement.className = 'time-slot text-center p-3 bg-blue-100 rounded-lg border hover:bg-blue-200 cursor-pointer';
+                timeElement.textContent = time;
+                timeElement.onclick = () => selectTime(time);
+                timeSlots.appendChild(timeElement);
+            }
         }
 
         function selectTime(time) {
+            selectedTime = time;
+            
+            // Mostrar loading
             document.getElementById('time-slots-section').classList.add('hidden');
-            document.getElementById('confirmation-section').classList.remove('hidden');
-            setTimeout(() => {
-                alert('🎉 Cita agendada para: Diciembre 15, 2025 a las ' + time);
-            }, 500);
+            document.getElementById('loading-section').classList.remove('hidden');
+            
+            // Guardar cita en backend
+            saveAppointment();
         }
 
-        function previousMonth() {
-            alert('← Mes anterior');
+        async function saveAppointment() {
+            try {
+                const dateTime = \`\${selectedDate}T\${selectedTime}:00\`;
+                
+                const response = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        businessId: businessId,
+                        clientName: clientName,
+                        clientPhone: phone,
+                        service: service,
+                        dateTime: dateTime
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Éxito - mostrar confirmación
+                    document.getElementById('loading-section').classList.add('hidden');
+                    document.getElementById('confirmation-section').classList.remove('hidden');
+                    document.getElementById('confirmation-message').textContent = 
+                        \`✅ Cita confirmada para \${moment(selectedDate).format('DD/MM/YYYY')} a las \${selectedTime}\`;
+                    
+                    console.log('✅ Cita guardada:', result);
+                } else {
+                    throw new Error(result.error || 'Error al guardar cita');
+                }
+            } catch (error) {
+                console.error('❌ Error guardando cita:', error);
+                document.getElementById('loading-section').classList.add('hidden');
+                alert('❌ Error: ' + error.message);
+                document.getElementById('time-slots-section').classList.remove('hidden');
+            }
         }
 
-        function nextMonth() {
-            alert('→ Mes siguiente');
+        function closeWindow() {
+            // Cerrar ventana/regresar a WhatsApp
+            if (window.opener) {
+                window.close();
+            } else {
+                // En móvil, redirigir a WhatsApp
+                window.location.href = 'https://wa.me/' + phone.replace('+', '');
+            }
         }
     </script>
 </body>
