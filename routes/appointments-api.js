@@ -9,13 +9,15 @@ router.post('/', async (req, res) => {
     const { businessId, clientName, clientPhone, service, dateTime, status, source } = req.body;
     
     // Asegurar formato correcto del número
-    let formattedPhone = clientPhone;
+    // Asegurar formato correcto del número
+    let formattedPhone = clientPhone.trim(); // Eliminar espacios
     if (!formattedPhone.startsWith("whatsapp:")) {
-      formattedPhone = formattedPhone.replace(/[^0-9+]/g, ""); // Limpiar caracteres
-      if (!formattedPhone.startsWith("+")) {
-        formattedPhone = "+" + formattedPhone.replace(/^521/, "52"); // Asegurar código país
-      }
       formattedPhone = "whatsapp:" + formattedPhone;
+    }
+    // Asegurar que tenga + y formato correcto
+    formattedPhone = formattedPhone.replace("whatsapp:", "whatsapp:+").replace(/[^0-9+]/g, "");
+    formattedPhone = formattedPhone.replace("whatsapp:++", "whatsapp:+"); // Evitar ++
+    console.log('📱 Teléfono formateado:', formattedPhone);
     }
 
     console.log('📅 Creando cita:', { businessId, clientName, clientPhone, service, dateTime });
