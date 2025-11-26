@@ -74,43 +74,12 @@ async function processBotMessage(business, message, phone) {
 
   } catch (error) {
     console.error('❌ Error en bot:', error);
-    return getErrorMessage(business);
-  }
-}
-
-async function handleAppointmentFlow(business, msg, phone, state) {
-  switch (state.step) {
-    case 'get_name':
-      state.data.name = msg;
-      state.step = 'get_service';
-      return `👋 Hola ${msg}! ¿Qué servicio necesitas?\n\n` + getServicesList(business);
-
-    case 'get_service':
-      const serviceIndex = parseInt(msg) - 1;
-      const serviceName = business.services[serviceIndex]?.name || msg;
-      state.data.service = serviceName;
-      ConversationManager.clearState(phone); // Finalizar el flujo de conversación
-
-      // --- GENERACIÓN DE URL DINÁMICA DEL CALENDARIO ---
-      const clientPhone = phone.replace('whatsapp:', ''); // Limpiar el prefijo 'whatsapp:'
-const businessId = business._id ? business._id.toString() : 'MISSING_ID'; // Asegurar formato de cadena
-      const BASE_URL = "https://dental-bot-prod.onrender.com"; // Usar la variable de entorno de Render
-      
-      if (!BASE_URL) {
-          console.error("RENDER_URL no definida. No se puede generar el link.");
-          return getErrorMessage(business);
-      }
-
       const calendarUrl = `${BASE_URL}/calendar-dashboard?` +
-        `businessId=6924f324cd054333d535c232&` +
-        `clientName=${encodeURIComponent(clientName)}&` +
-        `service=${encodeURIComponent(service)}&` +
-        `phone=${encodeURIComponent(phone)}`;
-                          `businessId=${business._id}` +
-                          `&clientName=${encodeURIComponent(state.data.name)}` +
-                          `&service=${encodeURIComponent(state.data.service)}` +
-                          `&phone=${clientPhone}`;
-      // ---------------------------------------------------
+        `businessId=${business._id}&` +
+        `clientName=${encodeURIComponent(state.data.name)}&` +
+        `service=${encodeURIComponent(state.data.service)}&` +
+        `phone=${clientPhone}`;
+
 
       // NOTA: Se usaron backticks (`) para la interpolación de variables
       return `📅 *Selecciona tu cita*\n\nHola ${state.data.name}, selecciona una fecha y hora disponible para tu servicio: *"${state.data.service}"*\n\n${calendarUrl}\n\n*La disponibilidad se actualiza en tiempo real.* Si necesitas otra cosa, inicia un nuevo menú.`;
