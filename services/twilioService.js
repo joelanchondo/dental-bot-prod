@@ -10,6 +10,8 @@ class TwilioService {
         throw new Error('Negocio no encontrado');
       }
 
+      console.log('📱 TwilioService - Teléfono del appointment:', appointment.clientPhone);
+
       // Formatear fecha
       const appointmentDate = new Date(appointment.dateTime);
       const formattedDate = appointmentDate.toLocaleDateString('es-MX', {
@@ -33,9 +35,10 @@ class TwilioService {
         `¡Te esperamos!`;
 
       // Enviar mensaje usando la función de config/twilio.js
-      await sendWhatsApp(business, formattedPhone, message);
+      // appointment.clientPhone YA ESTÁ FORMATEADO correctamente
+      await sendWhatsApp(business, appointment.clientPhone, message);
 
-      console.log(`📱 WhatsApp enviado a ${formattedPhone}`);
+      console.log(`📱 WhatsApp enviado a ${appointment.clientPhone}`);
       
     } catch (error) {
       console.error('❌ Error en sendAppointmentConfirmation:', error);
