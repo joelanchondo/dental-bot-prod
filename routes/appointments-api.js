@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
       service: service,
       dateTime: new Date(dateTime),
       status: status || 'confirmed',
-      source: source || 'web_calendar'
+      source: source || "web"
     });
 
     await appointment.save();
