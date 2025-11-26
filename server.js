@@ -43,12 +43,15 @@ const calendarDashboardRoutes = require('./routes/calendar-dashboard');  // Ruta
 app.use('/onboarding', onboardingRoutes);  // ✅ ESTA ES LA IMPORTANTE
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/onboarding-dashboard', onboardingDashboardRoutes);
+app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 
 // Otras rutas
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 app.use('/calendar-dashboard', calendarDashboardRoutes);
+app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 app.use('/api/appointments', require('./routes/appointments-api'));
 
 // Health check
