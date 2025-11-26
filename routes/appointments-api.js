@@ -7,6 +7,16 @@ const Business = require('../models/Business');
 router.post('/', async (req, res) => {
   try {
     const { businessId, clientName, clientPhone, service, dateTime, status, source } = req.body;
+    
+    // Asegurar formato correcto del número
+    let formattedPhone = clientPhone;
+    if (!formattedPhone.startsWith("whatsapp:")) {
+      formattedPhone = formattedPhone.replace(/[^0-9+]/g, ""); // Limpiar caracteres
+      if (!formattedPhone.startsWith("+")) {
+        formattedPhone = "+" + formattedPhone.replace(/^521/, "52"); // Asegurar código país
+      }
+      formattedPhone = "whatsapp:" + formattedPhone;
+    }
 
     console.log('📅 Creando cita:', { businessId, clientName, clientPhone, service, dateTime });
 

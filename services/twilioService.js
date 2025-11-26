@@ -33,9 +33,9 @@ class TwilioService {
         `¡Te esperamos!`;
 
       // Enviar mensaje usando la función de config/twilio.js
-      await sendWhatsApp(business, appointment.clientPhone, message);
+      await sendWhatsApp(business, formattedPhone, message);
 
-      console.log(`📱 WhatsApp enviado a ${appointment.clientPhone}`);
+      console.log(`📱 WhatsApp enviado a ${formattedPhone}`);
       
     } catch (error) {
       console.error('❌ Error en sendAppointmentConfirmation:', error);
