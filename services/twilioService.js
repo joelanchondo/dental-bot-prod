@@ -1,4 +1,4 @@
-const twilio = require('./../config/twilio');
+const { getTwilioClient, sendWhatsApp } = require('./../config/twilio');
 const Business = require('./../models/Business');
 
 class TwilioService {
@@ -10,9 +10,6 @@ class TwilioService {
         throw new Error('Negocio no encontrado');
       }
 
-      // Crear cliente Twilio
-      const client = twilio(business);
-      
       // Formatear fecha
       const appointmentDate = new Date(appointment.dateTime);
       const formattedDate = appointmentDate.toLocaleDateString('es-MX', {
@@ -31,16 +28,12 @@ class TwilioService {
         `📅 *Fecha:* ${formattedDate}\n` +
         `🦷 *Servicio:* ${appointment.service}\n` +
         `🏥 *Clínica:* ${business.businessName}\n\n` +
-        `📍 *Dirección:* ${business.address}\n` +
+        `📍 *Dirección:* ${business.address || 'Por confirmar'}\n` +
         `📞 *Teléfono:* ${business.whatsappBusiness}\n\n` +
         `¡Te esperamos!`;
 
-      // Enviar mensaje
-      await client.messages.create({
-        body: message,
-        from: `whatsapp:${business.whatsapp.number}`,
-        to: `whatsapp:${appointment.clientPhone}`
-      });
+      // Enviar mensaje usando la función de config/twilio.js
+      await sendWhatsApp(business, appointment.clientPhone, message);
 
       console.log(`📱 WhatsApp enviado a ${appointment.clientPhone}`);
       
