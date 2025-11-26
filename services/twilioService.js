@@ -32,7 +32,7 @@ class TwilioService {
         `🏥 *Clínica:* ${business.businessName}\n\n` +
         `📍 *Dirección:* ${business.address || 'Por confirmar'}\n` +
         `📞 *Teléfono:* ${business.whatsappBusiness}\n\n` +
-        `¡Te esperamos!`;
+        ``;
 
       // Enviar mensaje usando la función de config/twilio.js
       // appointment.clientPhone YA ESTÁ FORMATEADO correctamente
