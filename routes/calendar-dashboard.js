@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
           { name: 'Revisión General', duration: 20, price: 300 },
           { name: 'Blanqueamiento', duration: 60, price: 2000 }
         ],
-        address: 'Av. Principal #123',
+        address: 'Av. Dental #123, Col. Centro, CDMX',
         whatsappBusiness: '+521234567890'
       };
     }
@@ -90,12 +90,13 @@ router.get('/', async (req, res) => {
         <div id="calendar-section">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="changeMonth(-1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">←</button>
-                <h2 id="current-month" class="text-xl font-bold text-gray-800">Cargando...</h2>
+                <h2 id="current-month" class="text-xl font-bold text-gray-800">Cargando calendario...</h2>
                 <button onclick="changeMonth(1)" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">→</button>
             </div>
 
             <div class="grid grid-cols-7 gap-2 mb-4" id="calendar-days">
                 <!-- Días se cargan con JavaScript -->
+                <div class="text-center p-4 text-gray-500">Cargando...</div>
             </div>
         </div>
 
@@ -124,6 +125,7 @@ router.get('/', async (req, res) => {
     </div>
 
     <script>
+        // Variables globales
         let currentDate = moment();
         let selectedDate = null;
         let selectedTime = null;
@@ -132,13 +134,31 @@ router.get('/', async (req, res) => {
         const service = '${service || ''}';
         const phone = '${phone || ''}';
 
-        // Inicializar calendario
-        document.addEventListener('DOMContentLoaded', function() {
-            moment.locale('es');
-            renderCalendar();
-        });
+        // FORZAR INICIALIZACIÓN INMEDIATA
+        console.log('🚀 Inicializando calendario...');
+        
+        // Inicializar inmediatamente
+        function initializeCalendar() {
+            console.log('📅 Inicializando calendario con moment...');
+            try {
+                moment.locale('es');
+                renderCalendar();
+                console.log('✅ Calendario inicializado correctamente');
+            } catch (error) {
+                console.error('❌ Error inicializando calendario:', error);
+                document.getElementById('current-month').textContent = 'Error cargando calendario';
+            }
+        }
+
+        // Inicializar cuando todo esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeCalendar);
+        } else {
+            initializeCalendar();
+        }
 
         function renderCalendar() {
+            console.log('🎨 Renderizando calendario...');
             const monthYear = currentDate.format('MMMM YYYY');
             document.getElementById('current-month').textContent = monthYear.charAt(0).toUpperCase() + monthYear.slice(1);
             
@@ -251,6 +271,9 @@ router.get('/', async (req, res) => {
                         \`✅ Cita confirmada para \${moment(selectedDate).format('DD/MM/YYYY')} a las \${selectedTime}\`;
                     
                     console.log('✅ Cita guardada:', result);
+                    
+                    // Cerrar automáticamente después de 3 segundos
+                    setTimeout(closeWindow, 3000);
                 } else {
                     throw new Error(result.error || 'Error al guardar cita');
                 }
@@ -263,32 +286,20 @@ router.get('/', async (req, res) => {
         }
 
         function closeWindow() {
-  // Intentar cerrar ventana automáticamente
-  setTimeout(() => {
-    try {
-      if (window.opener) {
-        window.close();
-      } else if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        // Redirigir a WhatsApp
-        window.location.href = 'https://wa.me/' + phone.replace(/[^0-9]/g, '');
-      }
-    } catch (error) {
-      console.log('No se pudo cerrar automáticamente');
-    }
-  }, 2000); // Esperar 2 segundos antes de cerrar
-  
-  // Mostrar mensaje inmediato
-  document.getElementById('confirmation-message').innerHTML = 
-    '✅ <strong>Cita confirmada exitosamente!</strong><br><br>' +
-    '📅 <strong>Fecha:</strong> ' + moment(selectedDate).format('DD/MM/YYYY') + ' a las ' + selectedTime + '<br>' +
-    '🦷 <strong>Servicio:</strong> ' + service + '<br>' +
-    '👤 <strong>Paciente:</strong> ' + clientName + '<br><br>' +
-    'La ventana se cerrará automáticamente...';
-} else {
-                // En móvil, redirigir a WhatsApp
-                window.location.href = 'https://wa.me/' + phone.replace('+', '');
+            console.log('🔒 Cerrando ventana...');
+            try {
+                // Intentar cerrar ventana
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                } else {
+                    // Redirigir a WhatsApp
+                    const cleanPhone = phone.replace(/[^0-9]/g, '');
+                    window.location.href = 'https://wa.me/' + cleanPhone;
+                }
+            } catch (error) {
+                console.log('⚠️ No se pudo cerrar automáticamente, redirigiendo...');
+                const cleanPhone = phone.replace(/[^0-9]/g, '');
+                window.location.href = 'https://wa.me/' + cleanPhone;
             }
         }
     </script>
