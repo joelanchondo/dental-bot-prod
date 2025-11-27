@@ -375,8 +375,7 @@ router.get('/', (req, res) => {
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
                     // FIX DEFINITIVO: phoneNumber NUNCA será null
-                    console.log("🔍 DEBUG - whatsappBusiness:", formData.get("whatsappBusiness"));
-                    console.log("🔍 DEBUG - phoneNumber result:", formData.get("whatsappBusiness") || "biz-" + Date.now() + "-" + Math.random().toString(36).substr(2));
+                    phoneNumber: formData.get("whatsappBusiness") || "biz-" + Date.now() + "-" + Math.random().toString(36).substr(2),
                     addressStreet: formData.get('addressStreet'),
                     addressCity: formData.get('addressCity'),
                     addressPostalCode: formData.get('addressPostalCode'),
@@ -495,10 +494,12 @@ router.get('/', (req, res) => {
   `);
 });
 
-// POST /api/onboarding-complete - CON FIX DEFINITIVO
+// POST /api/onboarding-complete - CON FIX DEFINITIVO Y DEBUG MEJORADO
 router.post('/', async (req, res) => {
   try {
-    console.log('📥 [ONBOARDING-COMPLETE] Datos recibidos:', JSON.stringify(req.body, null, 2));
+    console.log('🔍📥 [ONBOARDING-COMPLETE] INICIANDO PROCESO...');
+    console.log('📋 Datos recibidos completos:', JSON.stringify(req.body, null, 2));
+    console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
 
     const { 
       businessName, legalName, rfc, businessType, 
@@ -547,21 +548,35 @@ router.post('/', async (req, res) => {
       status: 'active'
     });
 
+    console.log('💾 [ONBOARDING-COMPLETE] Guardando negocio en MongoDB...');
     await business.save();
-    console.log('✅ [ONBOARDING-COMPLETE] Negocio creado EXITOSAMENTE:', business._id);
+    console.log('🎉✅ [ONBOARDING-COMPLETE] NEGOCIO CREADO EXITOSAMENTE!');
+    console.log('   📍 ID:', business._id);
+    console.log('   🏢 Nombre:', business.businessName);
+    console.log('   📞 WhatsApp:', business.whatsappBusiness);
+    console.log('   📧 Email:', business.contactEmail);
 
+    console.log('📤 [ONBOARDING-COMPLETE] Enviando respuesta de éxito al cliente...');
     res.json({
       success: true,
-      message: 'Negocio creado exitosamente con toda la información',
+      message: '🎉 ¡Negocio creado exitosamente! Tu bot profesional está listo.',
       businessId: business._id,
-      dashboardUrl: `/dashboard-pro/${business._id}`
+      dashboardUrl: `/dashboard-pro/${business._id}`,
+      details: {
+        businessName: business.businessName,
+        whatsapp: business.whatsappBusiness,
+        email: business.contactEmail,
+        plan: business.plan
+      }
     });
 
   } catch (error) {
-    console.error('❌ [ONBOARDING-COMPLETE] Error:', error);
+    console.error('🚨❌ [ONBOARDING-COMPLETE] ERROR CRÍTICO:', error);
+    console.error('🔍 Stack trace:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor: ' + error.message
+      message: '❌ Error al crear el negocio: ' + error.message,
+      errorDetails: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
