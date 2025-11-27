@@ -482,4 +482,97 @@ router.get('/:businessId', async (req, res) => {
   }
 });
 
+
+// =============================================
+// APIs PARA GESTIÓN DE SERVICIOS
+// =============================================
+
+// GET /api/business/:id/services - Obtener servicios del negocio
+router.get('/api/business/:id/services', async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ error: 'Negocio no encontrado' });
+    }
+    res.json(business.services || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/business/:id/services - Agregar nuevo servicio
+router.post('/api/business/:id/services', async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ error: 'Negocio no encontrado' });
+    }
+
+    const newService = {
+      name: req.body.name,
+      price: req.body.price || 0,
+      duration: req.body.duration || 30,
+      active: true,
+      customService: true
+    };
+
+    if (!business.services) {
+      business.services = [];
+    }
+
+    business.services.push(newService);
+    await business.save();
+
+    res.json({ success: true, service: newService });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/business/:id/services/:serviceId - Actualizar servicio
+router.put('/api/business/:id/services/:serviceId', async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ error: 'Negocio no encontrado' });
+    }
+
+    const service = business.services.id(req.params.serviceId);
+    if (!service) {
+      return res.status(404).json({ error: 'Servicio no encontrado' });
+    }
+
+    if (req.body.price !== undefined) service.price = req.body.price;
+    if (req.body.name !== undefined) service.name = req.body.name;
+    if (req.body.duration !== undefined) service.duration = req.body.duration;
+
+    await business.save();
+    res.json({ success: true, service });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/business/:id/services/:serviceId/toggle - Activar/desactivar
+router.put('/api/business/:id/services/:serviceId/toggle', async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business) {
+      return res.status(404).json({ error: 'Negocio no encontrado' });
+    }
+
+    const service = business.services.id(req.params.serviceId);
+    if (!service) {
+      return res.status(404).json({ error: 'Servicio no encontrado' });
+    }
+
+    service.active = !service.active;
+    await business.save();
+
+    res.json({ success: true, active: service.active });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
