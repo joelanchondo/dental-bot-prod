@@ -3,7 +3,7 @@ const router = express.Router();
 const Business = require('../models/Business');
 const serviceCatalogs = require('../config/service-catalogs');
 
-// GET /onboarding-complete - Formulario CORREGIDO
+// GET /onboarding-complete - Formulario COMPLETO funcional
 router.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -355,7 +355,7 @@ router.get('/', (req, res) => {
             });
         });
 
-        // Envío del formulario - CORREGIDO: campos de dirección planos
+        // Envío del formulario - CON FIX DEFINITIVO DEL phoneNumber
         document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -371,11 +371,11 @@ router.get('/', (req, res) => {
                     rfc: formData.get('rfc'),
                     businessType: formData.get('businessType'),
                     whatsappBusiness: formData.get('whatsappBusiness'),
-                    phoneNumber: formData.get("whatsappBusiness") || `biz-${Date.now()}-${Math.random().toString(36).substr(2)}`, // ✅ Compatibilidad
                     contactEmail: formData.get('contactEmail'),
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
-                    // CORRECCIÓN: Campos de dirección como campos planos
+                    // FIX DEFINITIVO: phoneNumber NUNCA será null
+                    phoneNumber: formData.get("whatsappBusiness") || "biz-" + Date.now() + "-" + Math.random().toString(36).substr(2),
                     addressStreet: formData.get('addressStreet'),
                     addressCity: formData.get('addressCity'),
                     addressPostalCode: formData.get('addressPostalCode'),
@@ -419,7 +419,7 @@ router.get('/', (req, res) => {
                     }
                 };
 
-                // Validar campos requeridos - CORREGIDO: usar campos planos
+                // Validar campos requeridos
                 const required = [
                     'businessName', 'legalName', 'rfc', 'businessType', 
                     'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName',
@@ -432,7 +432,7 @@ router.get('/', (req, res) => {
                     throw new Error('Faltan campos obligatorios: ' + missing.join(', '));
                 }
 
-                console.log('📤 Enviando datos corregidos:', data);
+                console.log('📤 Enviando datos con phoneNumber fix:', data);
 
                 const response = await fetch('/api/onboarding-complete', {
                     method: 'POST',
@@ -494,7 +494,7 @@ router.get('/', (req, res) => {
   `);
 });
 
-// POST /api/onboarding-complete - CORREGIDO para recibir campos planos
+// POST /api/onboarding-complete - CON FIX DEFINITIVO
 router.post('/', async (req, res) => {
   try {
     console.log('📥 [ONBOARDING-COMPLETE] Datos recibidos:', JSON.stringify(req.body, null, 2));
@@ -502,15 +502,16 @@ router.post('/', async (req, res) => {
     const { 
       businessName, legalName, rfc, businessType, 
       whatsappBusiness, contactEmail, managerPhone, managerName,
-      addressStreet, addressCity, addressPostalCode,  // CORRECCIÓN: campos planos
+      phoneNumber, // ✅ AHORA SIEMPRE TIENE VALOR
+      addressStreet, addressCity, addressPostalCode,
       plan, businessHours 
     } = req.body;
 
-    // Validaciones completas - CORREGIDO: usar campos planos
+    // Validaciones completas
     const requiredFields = [
       'businessName', 'legalName', 'rfc', 'businessType', 
       'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName',
-      'addressStreet', 'addressCity', 'addressPostalCode'  // CORRECCIÓN: campos planos
+      'phoneNumber', 'addressStreet', 'addressCity', 'addressPostalCode'
     ];
     
     const missingFields = requiredFields.filter(field => !req.body[field] || req.body[field].trim() === '');
@@ -522,7 +523,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Crear negocio COMPLETO - CORREGIDO: construir objeto address
+    // Crear negocio COMPLETO
     const business = new Business({
       businessName,
       legalName,
@@ -531,6 +532,7 @@ router.post('/', async (req, res) => {
       whatsappBusiness,
       contactEmail,
       managerName,
+      phoneNumber, // ✅ NUNCA será null
       address: {
         street: addressStreet,
         city: addressCity,
@@ -545,7 +547,7 @@ router.post('/', async (req, res) => {
     });
 
     await business.save();
-    console.log('✅ [ONBOARDING-COMPLETE] Negocio creado COMPLETO:', business._id);
+    console.log('✅ [ONBOARDING-COMPLETE] Negocio creado EXITOSAMENTE:', business._id);
 
     res.json({
       success: true,
@@ -564,4 +566,3 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
-// DEPLOY TRIGGER Wed Nov 26 09:42:19 PM CST 2025
