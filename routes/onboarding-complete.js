@@ -3,7 +3,7 @@ const router = express.Router();
 const Business = require('../models/Business');
 const serviceCatalogs = require('../config/service-catalogs');
 
-// GET /onboarding-complete - Formulario COMPLETO
+// GET /onboarding-complete - Formulario CORREGIDO
 router.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -355,7 +355,7 @@ router.get('/', (req, res) => {
             });
         });
 
-        // Envío del formulario
+        // Envío del formulario - CORREGIDO: campos de dirección planos
         document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -374,11 +374,10 @@ router.get('/', (req, res) => {
                     contactEmail: formData.get('contactEmail'),
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
-                    address: {
-                        street: formData.get('addressStreet'),
-                        city: formData.get('addressCity'),
-                        postalCode: formData.get('addressPostalCode')
-                    },
+                    // CORRECCIÓN: Campos de dirección como campos planos
+                    addressStreet: formData.get('addressStreet'),
+                    addressCity: formData.get('addressCity'),
+                    addressPostalCode: formData.get('addressPostalCode'),
                     plan: formData.get('plan'),
                     businessHours: {
                         monday: {
@@ -419,18 +418,20 @@ router.get('/', (req, res) => {
                     }
                 };
 
-                // Validar campos requeridos
-                const required = ['businessName', 'legalName', 'rfc', 'businessType', 'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName', 'addressStreet', 'addressCity', 'addressPostalCode', 'plan'];
-                const missing = required.filter(field => {
-                    const value = field.includes('.') ? field.split('.').reduce((obj, key) => obj?.[key], data) : data[field];
-                    return !value || value.trim() === '';
-                });
+                // Validar campos requeridos - CORREGIDO: usar campos planos
+                const required = [
+                    'businessName', 'legalName', 'rfc', 'businessType', 
+                    'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName',
+                    'addressStreet', 'addressCity', 'addressPostalCode', 'plan'
+                ];
+                
+                const missing = required.filter(field => !data[field] || data[field].trim() === '');
 
                 if (missing.length > 0) {
                     throw new Error('Faltan campos obligatorios: ' + missing.join(', '));
                 }
 
-                console.log('📤 Enviando datos completos:', data);
+                console.log('📤 Enviando datos corregidos:', data);
 
                 const response = await fetch('/api/onboarding-complete', {
                     method: 'POST',
@@ -492,20 +493,26 @@ router.get('/', (req, res) => {
   `);
 });
 
-// POST /api/onboarding-complete - Procesar formulario COMPLETO
+// POST /api/onboarding-complete - CORREGIDO para recibir campos planos
 router.post('/', async (req, res) => {
   try {
     console.log('📥 [ONBOARDING-COMPLETE] Datos recibidos:', JSON.stringify(req.body, null, 2));
 
-    const { businessName, legalName, rfc, businessType, whatsappBusiness, contactEmail, managerPhone, managerName, address, plan, businessHours } = req.body;
+    const { 
+      businessName, legalName, rfc, businessType, 
+      whatsappBusiness, contactEmail, managerPhone, managerName,
+      addressStreet, addressCity, addressPostalCode,  // CORRECCIÓN: campos planos
+      plan, businessHours 
+    } = req.body;
 
-    // Validaciones completas
+    // Validaciones completas - CORREGIDO: usar campos planos
     const requiredFields = [
       'businessName', 'legalName', 'rfc', 'businessType', 
-      'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName'
+      'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName',
+      'addressStreet', 'addressCity', 'addressPostalCode'  // CORRECCIÓN: campos planos
     ];
     
-    const missingFields = requiredFields.filter(field => !req.body[field]);
+    const missingFields = requiredFields.filter(field => !req.body[field] || req.body[field].trim() === '');
     if (missingFields.length > 0) {
       console.log('❌ [ONBOARDING-COMPLETE] Faltan campos:', missingFields);
       return res.status(400).json({
@@ -514,7 +521,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Crear negocio COMPLETO
+    // Crear negocio COMPLETO - CORREGIDO: construir objeto address
     const business = new Business({
       businessName,
       legalName,
@@ -524,9 +531,9 @@ router.post('/', async (req, res) => {
       contactEmail,
       managerName,
       address: {
-        street: address.street,
-        city: address.city,
-        postalCode: address.postalCode,
+        street: addressStreet,
+        city: addressCity,
+        postalCode: addressPostalCode,
         state: 'Por definir',
         country: 'México'
       },
