@@ -47,6 +47,7 @@ app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 
 // Otras rutas
 app.use('/webhook', webhookRoutes);
+app.use("/debug", require("./routes/debug-businesses"));
 app.use('/api/admin', adminRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use("/dashboard-pro", require("./routes/dashboard-pro"));
@@ -174,3 +175,6 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 // Agregar ruta calendar-dashboard (antes del 404)
+
+// Onboarding mejorado
+app.use('/onboarding-enhanced', require('./routes/onboarding-enhanced'));
