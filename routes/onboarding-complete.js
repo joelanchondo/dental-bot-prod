@@ -490,11 +490,28 @@ router.get('/', (req, res) => {
   `);
 });
 
-// POST /api/onboarding-complete - CON FIX DEFINITIVO Y DEBUG MEJORADO
+// POST /api/onboarding-complete - CON TWILIO PRO INTEGRATION
 router.post('/', async (req, res) => {
   try {
-    console.log('🔍📥 [ONBOARDING-COMPLETE] INICIANDO PROCESO...');
+    console.log('🔍📥 [ONBOARDING-COMPLETE] INICIANDO PROCESO TWILIO PRO...');
     console.log('📋 Datos recibidos completos:', JSON.stringify(req.body, null, 2));
+    
+    // Validar WhatsApp Business
+    if (!req.body.whatsappBusiness || req.body.whatsappBusiness.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'El número de WhatsApp Business es requerido'
+      });
+    }
+
+    // Validar formato de número
+    const whatsappRegex = /^\+[1-9]\d{1,14}$/;
+    if (!whatsappRegex.test(req.body.whatsappBusiness.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de número WhatsApp inválido. Debe ser: +521234567890'
+      });
+    }
     console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
 
     const { 
@@ -520,7 +537,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Crear negocio COMPLETO
+    // Crear negocio COMPLETO CON TWILIO PRO
     const business = new Business({
       businessName,
       legalName,
@@ -538,6 +555,12 @@ router.post('/', async (req, res) => {
       },
       plan,
       businessHours,
+      whatsappConfig: {
+        provider: 'twilio',
+        status: 'pending_verification',
+        autoResponder: autoWhatsappSetup || false,
+        configuredAt: new Date()
+      },
       onboardingCompleted: true,
       status: 'active'
     });
@@ -550,17 +573,36 @@ router.post('/', async (req, res) => {
     console.log('   📞 WhatsApp:', business.whatsappBusiness);
     console.log('   📧 Email:', business.contactEmail);
 
-    console.log('📤 [ONBOARDING-COMPLETE] Enviando respuesta de éxito al cliente...');
+    console.log('📤 [ONBOARDING-COMPLETE] Enviando respuesta de éxito con Twilio Pro...');
+    
+    // Iniciar configuración Twilio en background (no bloqueante)
+    setTimeout(async () => {
+      try {
+        console.log('🔄 Iniciando configuración Twilio Pro para:', business._id);
+        // Aquí irá la lógica de compra y verificación de número Twilio
+        await initializeTwilioProConfig(business);
+      } catch (error) {
+        console.error('❌ Error configurando Twilio:', error);
+      }
+    }, 1000);
+
     res.json({
       success: true,
-      message: '🎉 ¡Negocio creado exitosamente! Tu bot profesional está listo.',
+      message: '🎉 ¡Negocio creado exitosamente!',
       businessId: business._id,
       dashboardUrl: `/dashboard-pro/${business._id}`,
+      whatsappStatus: 'pending_verification',
       details: {
         businessName: business.businessName,
         whatsapp: business.whatsappBusiness,
         email: business.contactEmail,
-        plan: business.plan
+        plan: business.plan,
+        nextSteps: [
+          '✅ Negocio registrado en sistema',
+          '🔄 Configurando WhatsApp Business (1-3 días)',
+          '🤖 Bot automático activado',
+          '📱 Los mensajes llegarán a tu dashboard temporalmente'
+        ]
       }
     });
 
@@ -574,5 +616,54 @@ router.post('/', async (req, res) => {
     });
   }
 });
+
+
+// =============================================
+// TWILIO PRO CONFIGURATION FUNCTIONS
+// =============================================
+
+async function initializeTwilioProConfig(business) {
+  try {
+    console.log('🚀 INICIANDO CONFIGURACIÓN TWILIO PRO PARA:', business.businessName);
+    
+    // 1. Comprar número Twilio dedicado
+    const twilioNumber = await purchaseTwilioDedicatedNumber();
+    console.log('📱 Número Twilio comprado:', twilioNumber);
+    
+    // 2. Iniciar verificación WhatsApp Business
+    const verificationId = await submitWhatsAppBusinessVerification(
+      business.whatsappBusiness,
+      twilioNumber,
+      business.businessName
+    );
+    console.log('✅ Verificación WhatsApp iniciada:', verificationId);
+    
+    // 3. Actualizar negocio con info Twilio
+    business.whatsappConfig.twilioNumber = twilioNumber;
+    business.whatsappConfig.verificationId = verificationId;
+    business.whatsappConfig.status = 'verification_pending';
+    await business.save();
+    
+    console.log('🎉 Configuración Twilio Pro completada para:', business._id);
+    
+  } catch (error) {
+    console.error('❌ Error en configuración Twilio Pro:', error);
+    business.whatsappConfig.status = 'configuration_failed';
+    business.whatsappConfig.error = error.message;
+    await business.save();
+  }
+}
+
+async function purchaseTwilioDedicatedNumber() {
+  // Placeholder - implementar con Twilio API
+  console.log('🛒 Comprando número Twilio dedicado...');
+  return '+19876543210'; // Número temporal
+}
+
+async function submitWhatsAppBusinessVerification(customerNumber, twilioNumber, businessName) {
+  // Placeholder - implementar con Twilio WhatsApp Business API
+  console.log('📋 Enviando verificación WhatsApp Business...');
+  return 'verification_123456'; // ID temporal
+}
 
 module.exports = router;

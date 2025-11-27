@@ -1,9 +1,26 @@
 require('dotenv').config();
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
+
+// 🔒 RATE LIMITING GLOBAL PARA PROTECCIÓN
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 1000, // máximo 1000 requests por ventana
+  message: {
+    error: 'Demasiadas solicitudes desde esta IP, intenta más tarde'
+  },
+  skip: (req) => {
+    // Saltar rate limit para webhooks de Twilio
+    return req.path.includes('/api/whatsapp') && 
+           req.headers['x-twilio-signature'] !== undefined;
+  }
+});
+
+app.use(globalLimiter);
 
 // Middleware
 app.use(cors());
