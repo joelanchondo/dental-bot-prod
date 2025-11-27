@@ -503,7 +503,6 @@ router.post('/', async (req, res) => {
     const { 
       businessName, legalName, rfc, businessType, 
       whatsappBusiness, contactEmail, managerPhone, managerName,
-      phoneNumber, // ✅ AHORA SIEMPRE TIENE VALOR
       addressStreet, addressCity, addressPostalCode,
       plan, businessHours 
     } = req.body;
@@ -512,7 +511,7 @@ router.post('/', async (req, res) => {
     const requiredFields = [
       'businessName', 'legalName', 'rfc', 'businessType', 
       'whatsappBusiness', 'contactEmail', 'managerPhone', 'managerName',
-      'phoneNumber', 'addressStreet', 'addressCity', 'addressPostalCode'
+      'addressStreet', 'addressCity', 'addressPostalCode'
     ];
     
     const missingFields = requiredFields.filter(field => !req.body[field] || req.body[field].trim() === '');
