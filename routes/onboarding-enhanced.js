@@ -3,7 +3,7 @@ const router = express.Router();
 const Business = require('../models/Business');
 const serviceCatalogs = require('../config/service-catalogs');
 
-// GET /onboarding-enhanced - Formulario de onboarding mejorado
+// GET /onboarding-enhanced - Formulario CORREGIDO
 router.get('/', (req, res) => {
   res.send(`
 <!DOCTYPE html>
@@ -135,7 +135,7 @@ router.get('/', (req, res) => {
                             <div class="font-medium text-gray-800">\${service.name}</div>
                             <div class="text-sm text-gray-600 flex justify-between">
                                 <span>\${service.duration} min</span>
-                                <span class="font-bold">$\${service.basePrice}</span>
+                                <span class="font-bold">$\${service.basePrice} MXN</span>
                             </div>
                             <div class="text-xs text-gray-500">\${service.category}</div>
                         </div>
@@ -146,40 +146,50 @@ router.get('/', (req, res) => {
             }
         }
 
-        // Estilos para planes seleccionados
+        // Estilos para planes seleccionados - CORREGIDO
         document.querySelectorAll('input[name="plan"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 document.querySelectorAll('.plan-card').forEach(card => {
-                    card.classList.remove('border-blue-500', 'border-green-500', 'border-purple-500', 'border-yellow-500', 'bg-blue-50');
+                    card.classList.remove('border-blue-500', 'border-green-500', 'border-purple-500', 'border-yellow-500', 'bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-yellow-50');
                 });
                 if (this.checked) {
                     const card = this.closest('label').querySelector('.plan-card');
                     const colors = {
-                        'basic': 'border-blue-500 bg-blue-50',
-                        'pro': 'border-green-500 bg-green-50', 
-                        'premium': 'border-purple-500 bg-purple-50',
-                        'demo': 'border-yellow-500 bg-yellow-50'
+                        'basic': ['border-blue-500', 'bg-blue-50'],
+                        'pro': ['border-green-500', 'bg-green-50'],
+                        'premium': ['border-purple-500', 'bg-purple-50'],
+                        'demo': ['border-yellow-500', 'bg-yellow-50']
                     };
-                    card.classList.add(colors[this.value]);
+                    card.classList.add(...colors[this.value]);
                 }
             });
         });
 
-        // Envío del formulario
+        // Envío del formulario - CON MEJOR MANEJO DE ERRORES
         document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData);
-            
-            // Procesar servicios seleccionados
-            const serviceCheckboxes = document.querySelectorAll('input[name="services"]:checked');
-            data.services = Array.from(serviceCheckboxes).map(cb => ({
-                name: cb.value,
-                price: parseInt(cb.dataset.price),
-                duration: parseInt(cb.dataset.duration)
-            }));
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '⏳ Creando negocio...';
+            submitBtn.disabled = true;
 
             try {
+                const formData = new FormData(e.target);
+                const data = {
+                    businessName: formData.get('businessName'),
+                    businessType: formData.get('businessType'),
+                    whatsappBusiness: formData.get('whatsappBusiness'),
+                    contactEmail: formData.get('contactEmail'),
+                    plan: formData.get('plan')
+                };
+
+                // Validar campos requeridos
+                if (!data.businessName || !data.businessType || !data.whatsappBusiness || !data.contactEmail || !data.plan) {
+                    throw new Error('Todos los campos marcados con * son obligatorios');
+                }
+
+                console.log('📤 Enviando datos:', data);
+
                 const response = await fetch('/api/onboarding-enhanced', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -199,25 +209,39 @@ router.get('/', (req, res) => {
                                     <p class="text-green-700">Tu bot está siendo configurado automáticamente</p>
                                     <div class="mt-2 text-sm">
                                         <p><strong>ID:</strong> \${result.businessId}</p>
-                                        <p><strong>Dashboard:</strong> <a href="/dashboard-pro/\${result.businessId}" class="underline">Ver Dashboard</a></p>
+                                        <p><strong>Dashboard:</strong> <a href="/dashboard-pro/\${result.businessId}" class="underline text-blue-600">Ver Dashboard Pro</a></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     \`;
+                    e.target.reset();
                 } else {
-                    resultDiv.innerHTML = \`
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div class="text-red-800 font-bold">Error:</div>
-                            <div class="text-red-700">\${result.message}</div>
-                        </div>
-                    \`;
+                    throw new Error(result.message || 'Error desconocido');
                 }
 
                 resultDiv.classList.remove('hidden');
             } catch (error) {
-                alert('Error de conexión: ' + error.message);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = \`
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="text-red-800 font-bold">Error:</div>
+                        <div class="text-red-700">\${error.message}</div>
+                    </div>
+                \`;
+                resultDiv.classList.remove('hidden');
+                console.error('❌ Error:', error);
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
+        });
+
+        // Inicializar estilos de planes
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[name="plan"]').forEach(radio => {
+                radio.dispatchEvent(new Event('change'));
+            });
         });
     </script>
 </body>
@@ -225,13 +249,16 @@ router.get('/', (req, res) => {
   `);
 });
 
-// POST /api/onboarding-enhanced - Procesar formulario mejorado
+// POST /api/onboarding-enhanced - CORREGIDO con mejor manejo de errores
 router.post('/', async (req, res) => {
   try {
-    const { businessName, businessType, whatsappBusiness, contactEmail, plan, services } = req.body;
+    console.log('📥 [ONBOARDING-ENHANCED] Datos recibidos:', req.body);
 
-    // Validaciones básicas
+    const { businessName, businessType, whatsappBusiness, contactEmail, plan } = req.body;
+
+    // Validaciones mejoradas
     if (!businessName || !businessType || !whatsappBusiness || !contactEmail || !plan) {
+      console.log('❌ [ONBOARDING-ENHANCED] Faltan campos requeridos');
       return res.status(400).json({
         success: false,
         message: 'Todos los campos obligatorios deben ser completados'
@@ -245,12 +272,13 @@ router.post('/', async (req, res) => {
       whatsappBusiness,
       contactEmail,
       plan,
-      managerName: req.body.managerName || 'Propietario',
+      managerName: 'Propietario',
       onboardingCompleted: true,
       status: 'active'
     });
 
     await business.save();
+    console.log('✅ [ONBOARDING-ENHANCED] Negocio creado:', business._id);
 
     res.json({
       success: true,
@@ -260,11 +288,10 @@ router.post('/', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en onboarding mejorado:', error);
+    console.error('❌ [ONBOARDING-ENHANCED] Error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor',
-      error: error.message
+      message: 'Error interno del servidor: ' + error.message
     });
   }
 });
