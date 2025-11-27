@@ -371,7 +371,7 @@ router.get('/', (req, res) => {
                     rfc: formData.get('rfc'),
                     businessType: formData.get('businessType'),
                     whatsappBusiness: formData.get('whatsappBusiness'),
-                    phoneNumber: formData.get("whatsappBusiness"), // ✅ Compatibilidad
+                    phoneNumber: formData.get("whatsappBusiness") || `biz-${Date.now()}-${Math.random().toString(36).substr(2)}`, // ✅ Compatibilidad
                     contactEmail: formData.get('contactEmail'),
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
