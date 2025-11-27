@@ -181,3 +181,8 @@ app.listen(PORT, '0.0.0.0', () => {
 // Onboarding completo con todos los campos
 app.use('/onboarding-complete', require('./routes/onboarding-complete'));
 app.use('/api/onboarding-complete', require('./routes/onboarding-complete'));
+
+// Onboarding completo con todos los campos
+app.use("/onboarding-complete", require("./routes/onboarding-complete"));
+app.use("/api/onboarding-complete", require("./routes/onboarding-complete"));
+
