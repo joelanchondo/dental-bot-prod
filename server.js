@@ -43,6 +43,8 @@ const calendarDashboardRoutes = require('./routes/calendar-dashboard');  // Ruta
 app.use('/onboarding', onboardingRoutes);  // ✅ ESTA ES LA IMPORTANTE
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/onboarding-dashboard', onboardingDashboardRoutes);
+app.use("/onboarding-complete", require("./routes/onboarding-complete"));
+app.use("/api/onboarding-complete", require("./routes/onboarding-complete"));
 app.use("/onboarding-enhanced", require("./routes/onboarding-enhanced"));
 app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 
@@ -178,11 +180,5 @@ app.listen(PORT, '0.0.0.0', () => {
 
 
 
-// Onboarding completo con todos los campos
-app.use('/onboarding-complete', require('./routes/onboarding-complete'));
-app.use('/api/onboarding-complete', require('./routes/onboarding-complete'));
 
-// Onboarding completo con todos los campos
-app.use("/onboarding-complete", require("./routes/onboarding-complete"));
-app.use("/api/onboarding-complete", require("./routes/onboarding-complete"));
 
