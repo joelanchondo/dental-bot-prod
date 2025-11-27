@@ -375,7 +375,6 @@ router.get('/', (req, res) => {
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
                     // FIX DEFINITIVO: phoneNumber NUNCA será null
-                    phoneNumber: formData.get("whatsappBusiness") || "biz-" + Date.now() + "-" + Math.random().toString(36).substr(2),
                     addressStreet: formData.get('addressStreet'),
                     addressCity: formData.get('addressCity'),
                     addressPostalCode: formData.get('addressPostalCode'),
@@ -534,7 +533,6 @@ router.post('/', async (req, res) => {
       whatsappBusiness,
       contactEmail,
       managerName,
-      phoneNumber, // ✅ NUNCA será null
       address: {
         street: addressStreet,
         city: addressCity,
