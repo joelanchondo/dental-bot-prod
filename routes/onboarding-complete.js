@@ -176,7 +176,7 @@ router.get('/', (req, res) => {
                             <!-- Los servicios se cargan dinámicamente -->
                         </div>
                         <div class="mt-4 text-sm text-gray-600">
-                            💡 Los servicios se cargan automáticamente según tu tipo de negocio. 
+                            💡 Estos servicios tendrán precios personalizables según tu tipo de negocio. 
                             Podrás agregar más servicios después en tu dashboard.
                         </div>
                     </div>
@@ -190,7 +190,7 @@ router.get('/', (req, res) => {
                             <input type="radio" name="plan" value="basic" class="sr-only" required>
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 plan-card h-full">
                                 <div class="font-bold text-gray-800">Básico</div>
-                                <div class="text-2xl font-bold text-blue-600">$299<sub>/mes</sub></div>
+                                <div class="text-2xl font-bold text-blue-600">$5,000<sub>/mes</sub></div>
                                 <ul class="text-xs text-gray-600 mt-3 space-y-1 text-left">
                                     <li>✓ Bot Básico Automático</li>
                                     <li>✓ Hasta 5 servicios</li>
@@ -203,7 +203,7 @@ router.get('/', (req, res) => {
                             <input type="radio" name="plan" value="pro" class="sr-only">
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-green-500 plan-card h-full">
                                 <div class="font-bold text-gray-800">Pro</div>
-                                <div class="text-2xl font-bold text-green-600">$599<sub>/mes</sub></div>
+                                <div class="text-2xl font-bold text-green-600">$16,000<sub>/mes</sub></div>
                                 <ul class="text-xs text-gray-600 mt-3 space-y-1 text-left">
                                     <li>✓ Todo en Básico</li>
                                     <li>✓ Dashboard Pro</li>
@@ -216,7 +216,7 @@ router.get('/', (req, res) => {
                             <input type="radio" name="plan" value="premium" class="sr-only">
                             <div class="border-2 border-gray-200 rounded-lg p-4 text-center cursor-pointer hover:border-purple-500 plan-card h-full">
                                 <div class="font-bold text-gray-800">Premium</div>
-                                <div class="text-2xl font-bold text-purple-600">$999<sub>/mes</sub></div>
+                                <div class="text-2xl font-bold text-purple-600">$25,000<sub>/mes</sub></div>
                                 <ul class="text-xs text-gray-600 mt-3 space-y-1 text-left">
                                     <li>✓ Todo en Pro</li>
                                     <li>✓ Pagos Online</li>
@@ -269,7 +269,7 @@ router.get('/', (req, res) => {
                             class="mt-1 text-blue-600 focus:ring-blue-500" checked>
                         <div class="flex-1">
                             <div class="font-medium text-gray-800">\${service.name}</div>
-                            <div class="text-sm text-gray-600 flex justify-between">
+                            <div class="text-sm text-gray-600 ">
                                 <span>\${service.duration} min</span>
                                 <span class="font-bold">$\${service.basePrice} MXN</span>
                             </div>
