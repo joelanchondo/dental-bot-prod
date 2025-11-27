@@ -558,7 +558,7 @@ router.post('/', async (req, res) => {
       whatsappConfig: {
         provider: 'twilio',
         status: 'pending_verification',
-        autoResponder: autoWhatsappSetup || false,
+        autoResponder: req.body.autoWhatsappSetup || false,
         configuredAt: new Date()
       },
       onboardingCompleted: true,
