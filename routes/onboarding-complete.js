@@ -355,7 +355,6 @@ router.get('/', (req, res) => {
             });
         });
 
-        // Envío del formulario - CON FIX DEFINITIVO DEL phoneNumber
         document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -374,7 +373,6 @@ router.get('/', (req, res) => {
                     contactEmail: formData.get('contactEmail'),
                     managerPhone: formData.get('managerPhone'),
                     managerName: formData.get('managerName'),
-                    // FIX DEFINITIVO: phoneNumber NUNCA será null
                     addressStreet: formData.get('addressStreet'),
                     addressCity: formData.get('addressCity'),
                     addressPostalCode: formData.get('addressPostalCode'),
@@ -431,7 +429,6 @@ router.get('/', (req, res) => {
                     throw new Error('Faltan campos obligatorios: ' + missing.join(', '));
                 }
 
-                console.log('📤 Enviando datos con phoneNumber fix:', data);
 
                 const response = await fetch('/api/onboarding-complete', {
                     method: 'POST',
