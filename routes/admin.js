@@ -82,3 +82,23 @@ router.delete('/businesses/:id', async (req, res) => {
 });
 
 module.exports = router;
+
+// GET /admin/debug-businesses - Ver negocios en MongoDB
+router.get('/debug-businesses', async (req, res) => {
+  try {
+    const businesses = await Business.find({});
+    res.json({
+      count: businesses.length,
+      businesses: businesses.map(biz => ({
+        id: biz._id,
+        name: biz.businessName,
+        whatsapp: biz.whatsappBusiness,
+        plan: biz.plan,
+        type: biz.businessType,
+        created: biz.createdAt
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
