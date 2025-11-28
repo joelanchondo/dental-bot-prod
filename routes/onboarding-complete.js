@@ -537,7 +537,7 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Crear negocio COMPLETO CON TWILIO PRO
+    // Crear negocio COMPLETO CON SERVICIOS REALES
     const business = new Business({
       businessName,
       legalName,
@@ -555,6 +555,8 @@ router.post('/', async (req, res) => {
       },
       plan,
       businessHours,
+      // SERVICIOS REALES DEL CATÁLOGO
+      services: generateBusinessServices(businessType),
       whatsappConfig: {
         provider: 'twilio',
         status: 'pending_verification',
@@ -664,6 +666,40 @@ async function submitWhatsAppBusinessVerification(customerNumber, twilioNumber, 
   // Placeholder - implementar con Twilio WhatsApp Business API
   console.log('📋 Enviando verificación WhatsApp Business...');
   return 'verification_123456'; // ID temporal
+}
+
+
+// =============================================
+// GENERACIÓN DE SERVICIOS POR TIPO DE NEGOCIO
+// =============================================
+
+function generateBusinessServices(businessType) {
+  const serviceCatalogs = {
+    dental: [
+      { name: "Consulta de Valoración", price: 0, duration: 30, active: true, category: "consultas" },
+      { name: "Limpieza Dental", price: 0, duration: 45, active: true, category: "preventivo" },
+      { name: "Extracción Dental", price: 0, duration: 40, active: true, category: "cirugias" },
+      { name: "Resina Dental", price: 0, duration: 50, active: true, category: "restauraciones" }
+    ],
+    medical: [
+      { name: "Consulta General", price: 0, duration: 30, active: true, category: "consultas" },
+      { name: "Consulta Especialidad", price: 0, duration: 45, active: true, category: "consultas" },
+      { name: "Estudios de Laboratorio", price: 0, duration: 60, active: true, category: "estudios" },
+      { name: "Vacunación", price: 0, duration: 15, active: true, category: "procedimientos" }
+    ],
+    spa: [
+      { name: "Masaje Relajante", price: 0, duration: 60, active: true, category: "masajes" },
+      { name: "Facial de Limpieza", price: 0, duration: 45, active: true, category: "faciales" },
+      { name: "Pedicure Spa", price: 0, duration: 60, active: true, category: "pies_manos" }
+    ]
+  };
+
+  // Servicios por defecto si no encuentra el tipo
+  const defaultServices = [
+    { name: "Servicio Principal", price: 0, duration: 60, active: true, category: "general" }
+  ];
+
+  return serviceCatalogs[businessType] || defaultServices;
 }
 
 module.exports = router;
