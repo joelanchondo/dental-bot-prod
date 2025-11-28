@@ -129,6 +129,7 @@ router.get('/:businessId', async (req, res) => {
 
     <div class="container mx-auto px-6 py-8">
             <!-- Navigation Tabs -->
+                        <!-- Navigation Tabs -->
             <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8">
                 <button class="tab-btn px-4 py-2 rounded-md font-medium transition-all duration-200 bg-white text-blue-600 shadow-sm" data-tab="overview">
                     📊 Resumen
