@@ -499,3 +499,14 @@ router.get('/:businessId', async (req, res) => {
 });
 
 module.exports = router;
+
+// Función básica para cargar servicios
+async function loadRealServices() {
+  try {
+    const response = await fetch(`/api/business/${businessId}/services`);
+    const services = await response.json();
+    console.log('Servicios cargados:', services);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
