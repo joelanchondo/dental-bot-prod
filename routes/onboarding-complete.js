@@ -265,13 +265,13 @@ router.get('/', (req, res) => {
                 servicesList.innerHTML = services.map(service => \`
                     <label class="flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 cursor-pointer">
                         <input type="checkbox" name="services" value="\${service.name}" 
-                            data-price="\${service.basePrice}" data-duration="\${service.duration}"
+                            data-duration="\${service.duration}"
                             class="mt-1 text-blue-600 focus:ring-blue-500" checked>
                         <div class="flex-1">
                             <div class="font-medium text-gray-800">\${service.name}</div>
                             <div class="text-sm text-gray-600 ">
                                 <span>\${service.duration} min</span>
-                                <span class="font-bold">$\${service.basePrice} MXN</span>
+                                <span class="font-bold"><span class="text-green-600">Precio personalizable</span></span>
                             </div>
                             <div class="text-xs text-gray-500">\${service.category}</div>
                         </div>
