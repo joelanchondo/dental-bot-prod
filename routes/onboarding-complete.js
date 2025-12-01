@@ -556,7 +556,7 @@ router.post('/', async (req, res) => {
       plan,
       businessHours,
       // SERVICIOS REALES DEL CATÁLOGO
-      services: generateBusinessServices(businessType),
+      services: generateBusinessServices(businessType, plan),
       whatsappConfig: {
         provider: 'twilio',
         status: 'pending_verification',
@@ -673,33 +673,49 @@ async function submitWhatsAppBusinessVerification(customerNumber, twilioNumber, 
 // GENERACIÓN DE SERVICIOS POR TIPO DE NEGOCIO
 // =============================================
 
-function generateBusinessServices(businessType) {
-  const serviceCatalogs = {
-    dental: [
-      { name: "Consulta de Valoración", price: 0, duration: 30, active: true, category: "consultas" },
-      { name: "Limpieza Dental", price: 0, duration: 45, active: true, category: "preventivo" },
-      { name: "Extracción Dental", price: 0, duration: 40, active: true, category: "cirugias" },
-      { name: "Resina Dental", price: 0, duration: 50, active: true, category: "restauraciones" }
-    ],
-    medical: [
-      { name: "Consulta General", price: 0, duration: 30, active: true, category: "consultas" },
-      { name: "Consulta Especialidad", price: 0, duration: 45, active: true, category: "consultas" },
-      { name: "Estudios de Laboratorio", price: 0, duration: 60, active: true, category: "estudios" },
-      { name: "Vacunación", price: 0, duration: 15, active: true, category: "procedimientos" }
-    ],
-    spa: [
-      { name: "Masaje Relajante", price: 0, duration: 60, active: true, category: "masajes" },
-      { name: "Facial de Limpieza", price: 0, duration: 45, active: true, category: "faciales" },
-      { name: "Pedicure Spa", price: 0, duration: 60, active: true, category: "pies_manos" }
-    ]
-  };
 
-  // Servicios por defecto si no encuentra el tipo
-  const defaultServices = [
-    { name: "Servicio Principal", price: 0, duration: 60, active: true, category: "general" }
-  ];
+// =============================================
+// GENERACIÓN DE SERVICIOS - ARQUITECTURA PREMIUM SAAS
+// =============================================
 
-  return serviceCatalogs[businessType] || defaultServices;
+function generateBusinessServices(businessType, plan = "basic") {
+  const serviceCatalogs = require("../config/service-catalogs");
+  const catalog = serviceCatalogs[businessType];
+  
+  if (!catalog) {
+    return [{
+      name: "Servicio Principal",
+      description: "Servicio principal del negocio",
+      duration: 60,
+      price: 0,
+      basePrice: 0,
+      active: true,
+      category: "general",
+      customService: false,
+      requiresPayment: false,
+      commission: plan === "premium" ? 10 : 0,
+      timesBooked: 0,
+      revenue: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }];
+  }
+  
+  return catalog.map(service => ({
+    name: service.name,
+    description: `Servicio de ${service.category}`,
+    duration: service.duration,
+    price: 0,                    // Gratis inicial - editable en dashboard
+    basePrice: service.basePrice, // Precio sugerido del catálogo
+    active: true,
+    category: service.category,
+    customService: false,        // Del catálogo
+    requiresPayment: false,      // Pago en consultorio por defecto
+    commission: plan === "premium" ? 10 : 0,
+    timesBooked: 0,
+    revenue: 0,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }));
 }
-
 module.exports = router;

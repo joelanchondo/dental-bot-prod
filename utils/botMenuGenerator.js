@@ -4,14 +4,20 @@ const Business = require('../models/Business');
  * Obtiene un negocio y sus servicios activos
  */
 const getBusiness = async (businessId) => {
-  return await Business.findById(businessId).select('services businessName slug');
+  return await Business.findById(businessId).select('services businessName slug plan');
 };
 
 /**
  * Genera el menú de servicios para WhatsApp
  */
 const generateServiceMenu = (business) => {
-  let menu = `*${business.businessName}*\n\nServicios disponibles:\n\n`;
+  let menu = `*${business.businessName}*\n\n`;
+  
+  if (business.plan === 'premium') {
+    menu += `👑 *Plan Premium Activado*\n\n`;
+  }
+  
+  menu += `Servicios disponibles:\n\n`;
 
   const activeServices = business.services.filter(s => s.active);
 
@@ -22,7 +28,28 @@ const generateServiceMenu = (business) => {
   activeServices.forEach((service, index) => {
     menu += `${index + 1}. *${service.name}*\n`;
     if (service.description) menu += `   ${service.description}\n`;
-    menu += `   💰 $${service.price}\n`;
+    
+    // Lógica inteligente de precios
+    if (service.price > 0) {
+      // Precio ya establecido por el negocio
+      menu += `   💰 $${service.price}`;
+      if (service.basePrice > 0 && service.price !== service.basePrice) {
+        menu += ` (Sugerido: $${service.basePrice})`;
+      }
+      if (service.requiresPayment === false) {
+        menu += ` (Pago en consultorio)`;
+      } else if (business.plan === 'premium') {
+        menu += ` 💳 (Pago online disponible)`;
+      }
+      menu += `\n`;
+    } else if (service.basePrice > 0) {
+      // Precio 0 pero tenemos sugerencia del catálogo
+      menu += `   💰 Desde: $${service.basePrice} (editable en tu dashboard)\n`;
+    } else {
+      // Sin precio ni sugerencia
+      menu += `   💰 Consultar precio\n`;
+    }
+    
     if (service.duration) menu += `   ⏱️ ${service.duration} min\n`;
     menu += `\n`;
   });
@@ -40,8 +67,36 @@ const getServiceByIndex = (business, index) => {
   return activeServices[index - 1] || null;
 };
 
+/**
+ * Obtiene precio formateado (maneja la nueva arquitectura)
+ */
+const getFormattedPrice = (service, businessPlan) => {
+  if (service.price > 0) {
+    let priceText = `$${service.price}`;
+    
+    if (service.basePrice > 0 && service.price !== service.basePrice) {
+      priceText += ` (Sugerido: $${service.basePrice})`;
+    }
+    
+    if (service.requiresPayment === false) {
+      priceText += ' (Pago en consultorio)';
+    } else if (businessPlan === 'premium') {
+      priceText += ' 💳';
+    }
+    
+    return priceText;
+  }
+  
+  if (service.basePrice > 0) {
+    return `Desde: $${service.basePrice} (editable)`;
+  }
+  
+  return 'Consultar precio';
+};
+
 module.exports = {
   getBusiness,
   generateServiceMenu,
-  getServiceByIndex
+  getServiceByIndex,
+  getFormattedPrice
 };
