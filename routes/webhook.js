@@ -110,3 +110,36 @@ router.post('/whatsapp', async (req, res) => {
 });
 
 module.exports = router;
+
+// Ruta de prueba para ver servicios dinámicos de un negocio
+router.get('/test-services/:businessId', async (req, res) => {
+  try {
+    const { businessId } = req.params;
+    const business = await Business.findById(businessId);
+    
+    if (!business) {
+      return res.status(404).json({ error: 'Negocio no encontrado' });
+    }
+    
+    const { generateServiceMenu } = require('../utils/botMenuGenerator');
+    const menu = generateServiceMenu(business);
+    
+    res.json({
+      success: true,
+      business: business.businessName,
+      servicesCount: business.services.length,
+      activeServices: business.services.filter(s => s.active).length,
+      menuPreview: menu.substring(0, 200) + '...',
+      services: business.services.map(s => ({
+        name: s.name,
+        price: s.price,
+        duration: s.duration,
+        description: s.description,
+        active: s.active
+      }))
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
