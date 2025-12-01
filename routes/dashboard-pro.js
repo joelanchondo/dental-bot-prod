@@ -5,7 +5,22 @@ const Appointment = require('../models/Appointment');
 const moment = require('moment');
 
 // GET /dashboard-pro/:businessId - DASHBOARD ULTRA PROFESIONAL
-router.get('/:businessId', async (req, res) => {
+router.get('/:identifier', async (req, res) => {
+  try {
+    let business;
+    
+    // Buscar por slug primero, luego por ID
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      // Es un ObjectId de MongoDB
+      business = await Business.findById(req.params.identifier);
+    } else {
+      // Es un slug
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+    
+    if (!business) {
+      return res.status(404).send('Negocio no encontrado');
+    } async (req, res) => {
   try {
     const business = await Business.findById(req.params.businessId);
     if (!business) {
@@ -495,6 +510,97 @@ router.get('/:businessId', async (req, res) => {
   } catch (error) {
     console.error('Error en dashboard pro:', error);
     res.status(500).send('Error cargando dashboard profesional');
+  }
+});
+
+
+// POST - Agregar nuevo servicio
+router.post("/:identifier/services", async (req, res) => {
+  try {
+    let business;
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    const { name, description, duration, price } = req.body;
+    
+    business.services.push({
+      name,
+      description,
+      duration,
+      price,
+      active: true
+    });
+
+    await business.save();
+    
+    res.json({ success: true, services: business.services });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT - Actualizar servicio existente
+router.put("/:identifier/services/:serviceId", async (req, res) => {
+  try {
+    let business;
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    const service = business.services.id(req.params.serviceId);
+    if (!service) {
+      return res.status(404).json({ error: "Servicio no encontrado" });
+    }
+
+    const { name, description, duration, price, active } = req.body;
+    
+    if (name !== undefined) service.name = name;
+    if (description !== undefined) service.description = description;
+    if (duration !== undefined) service.duration = duration;
+    if (price !== undefined) service.price = price;
+    if (active !== undefined) service.active = active;
+
+    await business.save();
+    
+    res.json({ success: true, service });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE - Eliminar servicio
+router.delete("/:identifier/services/:serviceId", async (req, res) => {
+  try {
+    let business;
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    business.services.id(req.params.serviceId).remove();
+    await business.save();
+    
+    res.json({ success: true, message: "Servicio eliminado" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
