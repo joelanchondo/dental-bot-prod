@@ -517,37 +517,51 @@ router.get('/:identifier', async (req, res) => {
 // POST - Agregar nuevo servicio
 router.post("/:identifier/services", async (req, res) => {
   try {
+    const { identifier } = req.params;
+    const { name, description = "", duration = 30, price = 1000, active = true, category = "general" } = req.body;
+
     let business;
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      business = await Business.findById(req.params.identifier);
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      business = await Business.findById(identifier);
     } else {
-      business = await Business.findOne({ slug: req.params.identifier });
+      business = await Business.findOne({ slug: identifier });
     }
 
     if (!business) {
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    const { name, description, duration, price } = req.body;
-    
     business.services.push({
       name,
       description,
-      duration,
-      price,
-      active: true
+      duration: parseInt(duration),
+      price: parseInt(price),
+      active,
+      category,
+      requiresPayment,
+      customService: true,
+      basePrice: parseInt(price), // Para custom, basePrice = price
+      commission: 0,
+      timesBooked: 0,
+      revenue: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+      name,
+      description,
+      duration: parseInt(duration),
+      price: parseInt(price),
+      active,
+      category,
+      customService: true
     });
 
     await business.save();
-    
     res.json({ success: true, services: business.services });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error al crear servicio:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
-
-// PUT - Actualizar servicio existente
-router.put("/:identifier/services/:serviceId", async (req, res) => {
   try {
     let business;
     if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
@@ -568,6 +582,8 @@ router.put("/:identifier/services/:serviceId", async (req, res) => {
     const { name, description, duration, price, active } = req.body;
     
     if (name !== undefined) service.name = name;
+    if (category !== undefined) service.category = category;
+    if (requiresPayment !== undefined) service.requiresPayment = requiresPayment;
     if (description !== undefined) service.description = description;
     if (duration !== undefined) service.duration = duration;
     if (price !== undefined) service.price = price;
