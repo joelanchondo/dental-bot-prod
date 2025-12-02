@@ -635,6 +635,127 @@ router.get('/:identifier', async (req, res) => {
                 </div>
             </div>
 
+            <!-- Pestaña Calendario -->
+            <div id="calendar-tab" class="tab-content hidden">
+                <div class="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white flex items-center">
+                                <span class="bg-blue-600 w-1 h-8 rounded-full mr-3"></span>
+                                📅 Gestión de Calendario
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1">Administra todas tus citas y disponibilidad</p>
+                        </div>
+                        <button onclick="createNewAppointment()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                            <i class="fas fa-plus"></i>
+                            <span>Nueva Cita</span>
+                        </button>
+                    </div>
+
+                    <!-- Filtros y Vistas -->
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="lg:col-span-3 flex space-x-2">
+                            <button onclick="changeCalendarView('day')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors" id="view-day">
+                                Día
+                            </button>
+                            <button onclick="changeCalendarView('week')" class="flex-1 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors" id="view-week">
+                                Semana
+                            </button>
+                            <button onclick="changeCalendarView('month')" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors" id="view-month">
+                                Mes
+                            </button>
+                        </div>
+                        <input type="date" id="calendar-date-picker" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="jumpToDate(this.value)">
+                    </div>
+
+                    <!-- Calendario Grande (ya renderizado en overview) -->
+                    <div class="bg-gray-800/50 rounded-xl p-4" style="min-height: 700px;">
+                        <div id="calendar-full-view" class="h-full">
+                            <!-- Se renderiza con JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Citas -->
+            <div id="appointments-tab" class="tab-content hidden">
+                <div class="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white flex items-center">
+                                <span class="bg-green-600 w-1 h-8 rounded-full mr-3"></span>
+                                👥 Gestión de Citas
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1">Lista completa de todas las citas programadas</p>
+                        </div>
+                        <button onclick="createNewAppointment()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Agendar Cita</span>
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <input type="text" id="search-appointments" placeholder="🔍 Buscar por nombre o teléfono..." class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onkeyup="filterAppointments()">
+                        <select id="status-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
+                            <option value="">Todos los estados</option>
+                            <option value="pending">Pendientes</option>
+                            <option value="confirmed">Confirmadas</option>
+                            <option value="cancelled">Canceladas</option>
+                            <option value="completed">Completadas</option>
+                        </select>
+                        <select id="service-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
+                            <option value="">Todos los servicios</option>
+                            \${businessServices.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('')}
+                        </select>
+                        <input type="date" id="date-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
+                    </div>
+
+                    <!-- Stats Rápidas -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-blue-900/50 border border-blue-700/30 rounded-xl p-4">
+                            <p class="text-blue-300 text-sm mb-1">Total Citas</p>
+                            <p class="text-3xl font-bold text-white" id="total-appointments">\${appointments.length}</p>
+                        </div>
+                        <div class="bg-yellow-900/50 border border-yellow-700/30 rounded-xl p-4">
+                            <p class="text-yellow-300 text-sm mb-1">Pendientes</p>
+                            <p class="text-3xl font-bold text-white" id="pending-appointments">\${appointments.filter(a => a.status === 'pending').length}</p>
+                        </div>
+                        <div class="bg-green-900/50 border border-green-700/30 rounded-xl p-4">
+                            <p class="text-green-300 text-sm mb-1">Confirmadas</p>
+                            <p class="text-3xl font-bold text-white" id="confirmed-appointments">\${appointments.filter(a => a.status === 'confirmed').length}</p>
+                        </div>
+                        <div class="bg-purple-900/50 border border-purple-700/30 rounded-xl p-4">
+                            <p class="text-purple-300 text-sm mb-1">Hoy</p>
+                            <p class="text-3xl font-bold text-white" id="today-appointments">\${appointments.filter(a => moment(a.dateTime).isSame(moment(), 'day')).length}</p>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Citas -->
+                    <div id="appointments-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                        <!-- Se renderiza con JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña Configuración -->
+            <div id="settings-tab" class="tab-content hidden">
+                <div class="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 fade-in">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-white flex items-center">
+                            <span class="bg-purple-600 w-1 h-8 rounded-full mr-3"></span>
+                            ⚙️ Configuración
+                        </h2>
+                        <p class="text-gray-400 text-sm mt-1">Administra la configuración de tu negocio</p>
+                    </div>
+                    
+                    <div class="text-white text-center py-20">
+                        <i class="fas fa-tools text-6xl text-gray-600 mb-4"></i>
+                        <p class="text-xl text-gray-400">Próximamente: Configuración de usuario, horarios y más...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Otras pestañas... -->
         </div>
     </div>
