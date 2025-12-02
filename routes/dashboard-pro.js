@@ -33,6 +33,53 @@ function getServiceIcon(service) {
   return icons[category] || icons.general;
 }
 
+
+function renderServiceCard(service) {
+  const iconClass = getServiceIconClass(service);
+  const icon = getServiceIcon(service);
+  const paymentBadge = service.requiresPayment ? "badge-online" : "badge-office";
+  const paymentText = service.requiresPayment ? "💳 Pago Online" : "🏥 Pago Consultorio";
+  const isActive = service.active ? "badge-active" : "badge-inactive";
+  const statusText = service.active ? "Activo" : "Inactivo";
+  
+  return `
+    <div class="service-card glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-300" data-service-id="${service._id}">
+      <div class="flex items-start mb-4">
+        <div class="service-icon ${iconClass} flex-shrink-0">
+          <i class="${icon}"></i>
+        </div>
+        <div class="flex-1 ml-4">
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-lg text-gray-800 truncate">${service.name}</h3>
+            <span class="text-xl font-bold text-gray-800">$${service.price}</span>
+          </div>
+          ${service.description ? `<p class="text-gray-600 text-sm mt-2 line-clamp-2">${service.description}</p>` : ""}
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="service-badge ${isActive}">${statusText}</span>
+        <span class="service-badge ${paymentBadge}">${paymentText}</span>
+        <span class="service-badge bg-blue-100 text-blue-800">⏱️ ${service.duration || 30} min</span>
+        <span class="service-badge bg-purple-100 text-purple-800">📁 ${service.category || "general"}</span>
+        ${service.commission > 0 ? `<span class="service-badge bg-pink-100 text-pink-800">👑 ${service.commission}%</span>` : ""}
+      </div>
+      <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+        <div class="text-sm text-gray-500">
+          ${service.createdAt ? `Creado: ${new Date(service.createdAt).toLocaleDateString("es-MX")}` : "Sin fecha"}
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="editService('${service._id}')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
+            <i class="fas fa-edit mr-1"></i> Editar
+          </button>
+          <button onclick="deleteService('${service._id}')" class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
+            <i class="fas fa-trash mr-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 router.get('/:identifier', async (req, res) => {
   try {
     let business;
