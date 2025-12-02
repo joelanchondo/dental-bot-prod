@@ -436,7 +436,7 @@ router.get('/:identifier', async (req, res) => {
                             <span class="text-green-300 text-xs font-medium">HOY</span>
                         </div>
                         <h3 class="text-3xl font-bold text-white mb-1" id="today-count">0</h3>
-                        <p class="text-green-200 text-sm">\${moment().format('DD MMM YYYY')}</p>
+                        <p class="text-green-200 text-sm">${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
 
                     <!-- Card 3: Ingresos -->
