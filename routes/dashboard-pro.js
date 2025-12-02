@@ -706,7 +706,7 @@ router.get('/:identifier', async (req, res) => {
                         </select>
                         <select id="service-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
                             <option value="">Todos los servicios</option>
-                            \${businessServices.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('')}
+                            ${businessServices.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('')}
                         </select>
                         <input type="date" id="date-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
                     </div>
