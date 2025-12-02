@@ -423,7 +423,7 @@ router.get('/:identifier', async (req, res) => {
                             </div>
                             <span class="text-blue-300 text-xs font-medium">ACTIVOS</span>
                         </div>
-                        <h3 class="text-3xl font-bold text-white mb-1">\${businessServices.length}</h3>
+                        <h3 class="text-3xl font-bold text-white mb-1">${businessServices.length}</h3>
                         <p class="text-blue-200 text-sm">Servicios Totales</p>
                     </div>
 
@@ -447,7 +447,7 @@ router.get('/:identifier', async (req, res) => {
                             </div>
                             <span class="text-yellow-300 text-xs font-medium">MES</span>
                         </div>
-                        <h3 class="text-3xl font-bold text-white mb-1">$\${(appointments.length * 500).toLocaleString()}</h3>
+                        <h3 class="text-3xl font-bold text-white mb-1">$${(appointments.length * 500).toLocaleString()}</h3>
                         <p class="text-yellow-200 text-sm">Ingresos Estimados</p>
                     </div>
 
