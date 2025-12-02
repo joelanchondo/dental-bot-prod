@@ -33,6 +33,9 @@ router.get('/:identifier', async (req, res) => {
       return acc;
     }, {});
 
+    // Obtener servicios del negocio (del onboarding)
+    const businessServices = business.services || [];
+
     res.send(`
 <!DOCTYPE html>
 <html lang="es">
@@ -44,12 +47,17 @@ router.get('/:identifier', async (req, res) => {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/locale/es.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #0f172a;
             --secondary-blue: #1e293b;
             --accent-gold: #f59e0b;
             --light-gold: #fbbf24;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+            --warning-orange: #f97316;
         }
 
         body {
@@ -62,6 +70,12 @@ router.get('/:identifier', async (req, res) => {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card-dark {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .calendar-day {
@@ -99,6 +113,18 @@ router.get('/:identifier', async (req, res) => {
         .status-cancelled { background: #fee2e2; color: #991b1b; }
         .status-urgent { background: #fecaca; color: #dc2626; }
 
+        .service-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-active { background: #d1fae5; color: #065f46; }
+        .badge-inactive { background: #f3f4f6; color: #4b5563; }
+        .badge-online { background: #e0e7ff; color: #3730a3; }
+        .badge-office { background: #fef3c7; color: #92400e; }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -107,19 +133,156 @@ router.get('/:identifier', async (req, res) => {
         .fade-in {
             animation: fadeIn 0.5s ease-out;
         }
-        
+
         .tab-content {
             display: none;
         }
-        
+
         .tab-content.active {
             display: block;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 16px;
+        }
+
+        .service-dentist { background: #dbeafe; color: #1e40af; }
+        .service-cleaning { background: #d1fae5; color: #065f46; }
+        .service-whitening { background: #fef3c7; color: #92400e; }
+        .service-implants { background: #fce7f3; color: #9d174d; }
+        .service-general { background: #f3f4f6; color: #4b5563; }
+
+        .stats-card {
+            transition: all 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-field {
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-gold) 0%, var(--light-gold) 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-blue);
+            border: 2px solid #e5e7eb;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-red) 0%, #f87171 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
     </style>
 </head>
 <body class="text-gray-800">
     <!-- Header -->
-    <div class="bg-white/10 backdrop-blur-md border-b border-white/20">
+    <div class="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-4">
@@ -128,36 +291,47 @@ router.get('/:identifier', async (req, res) => {
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold text-white">${business.businessName}</h1>
-                        <p class="text-blue-100">Dashboard Profesional</p>
+                        <p class="text-blue-100 text-sm">Dashboard Profesional | Servicios conectados con Onboarding</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="bg-yellow-500 text-white px-4 py-2 rounded-full font-bold text-sm">
-                        ${business.plan.toUpperCase()}
-                    </span>
-                    <div class="text-right">
-                        <p class="text-white text-sm">Estado</p>
-                        <p class="text-green-400 font-bold">● Activo</p>
+                    <div class="bg-black/20 rounded-full px-4 py-2">
+                        <span class="text-yellow-400 font-bold">${business.plan.toUpperCase()}</span>
+                    </div>
+                    <div class="text-right hidden md:block">
+                        <p class="text-white/80 text-sm">Estado del Sistema</p>
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 pulse-animation"></div>
+                            <p class="text-green-400 font-bold text-sm">Operativo</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container mx-auto px-6 py-8">
+    <div class="container mx-auto px-4 md:px-6 py-8">
         <!-- Navigation Tabs -->
-        <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8">
-            <button class="tab-btn px-4 py-2 rounded-md font-medium transition-all duration-200 bg-white text-blue-600 shadow-sm" data-tab="overview">
-                📊 Resumen
+        <div class="flex flex-wrap gap-2 bg-gray-900/50 p-2 rounded-xl mb-8 border border-white/10">
+            <button class="tab-btn px-5 py-3 rounded-lg font-medium transition-all duration-300 bg-white text-blue-900 shadow-lg flex items-center space-x-2" data-tab="overview">
+                <i class="fas fa-chart-line"></i>
+                <span>📊 Resumen</span>
             </button>
-            <button class="tab-btn px-4 py-2 rounded-md font-medium transition-all duration-200" data-tab="services">
-                🛠️ Servicios
+            <button class="tab-btn px-5 py-3 rounded-lg font-medium transition-all duration-300 bg-gray-800/50 text-white hover:bg-white/10 flex items-center space-x-2" data-tab="services">
+                <i class="fas fa-cogs"></i>
+                <span>🛠️ Servicios Onboarding</span>
             </button>
-            <button class="tab-btn px-4 py-2 rounded-md font-medium transition-all duration-200" data-tab="calendar">
-                📅 Calendario
+            <button class="tab-btn px-5 py-3 rounded-lg font-medium transition-all duration-300 bg-gray-800/50 text-white hover:bg-white/10 flex items-center space-x-2" data-tab="calendar">
+                <i class="fas fa-calendar-alt"></i>
+                <span>📅 Calendario</span>
             </button>
-            <button class="tab-btn px-4 py-2 rounded-md font-medium transition-all duration-200" data-tab="appointments">
-                👥 Citas
+            <button class="tab-btn px-5 py-3 rounded-lg font-medium transition-all duration-300 bg-gray-800/50 text-white hover:bg-white/10 flex items-center space-x-2" data-tab="appointments">
+                <i class="fas fa-users"></i>
+                <span>👥 Citas</span>
+            </button>
+            <button class="tab-btn px-5 py-3 rounded-lg font-medium transition-all duration-300 bg-gray-800/50 text-white hover:bg-white/10 flex items-center space-x-2" data-tab="settings">
+                <i class="fas fa-sliders-h"></i>
+                <span>⚙️ Configuración</span>
             </button>
         </div>
 
@@ -166,203 +340,770 @@ router.get('/:identifier', async (req, res) => {
             <!-- Pestaña Overview -->
             <div id="overview-tab" class="tab-content active">
                 <!-- Stats Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 fade-in">
-                    <div class="glass-card rounded-2xl p-6 text-center">
-                        <div class="text-3xl mb-2">📅</div>
-                        <h3 class="text-gray-600 text-sm">Citas Hoy</h3>
-                        <p class="text-2xl font-bold text-gray-800" id="today-count">0</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
+                    <div class="glass-card rounded-2xl p-6 stats-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm mb-2">Total Servicios</p>
+                                <h3 class="text-3xl font-bold text-gray-800">${businessServices.length}</h3>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-xl">
+                                <i class="fas fa-cogs text-blue-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-green-600 text-sm flex items-center">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                Del onboarding
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 text-center">
-                        <div class="text-3xl mb-2">👥</div>
-                        <h3 class="text-gray-600 text-sm">Total Citas</h3>
-                        <p class="text-2xl font-bold text-gray-800">${appointments.length}</p>
+                    <div class="glass-card rounded-2xl p-6 stats-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm mb-2">Citas Hoy</p>
+                                <h3 class="text-3xl font-bold text-gray-800" id="today-count">0</h3>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-xl">
+                                <i class="fas fa-calendar-check text-green-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-gray-500 text-sm">${moment().format('DD/MM/YYYY')}</p>
+                        </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 text-center">
-                        <div class="text-3xl mb-2">✅</div>
-                        <h3 class="text-gray-600 text-sm">Confirmadas</h3>
-                        <p class="text-2xl font-bold text-gray-800" id="confirmed-count">0</p>
+                    <div class="glass-card rounded-2xl p-6 stats-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm mb-2">Ingresos Mensuales</p>
+                                <h3 class="text-3xl font-bold text-gray-800">$${(appointments.length * 500).toLocaleString()}</h3>
+                            </div>
+                            <div class="bg-yellow-100 p-3 rounded-xl">
+                                <i class="fas fa-dollar-sign text-yellow-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-blue-600 text-sm flex items-center">
+                                <i class="fas fa-chart-line mr-1"></i>
+                                Est. basado en citas
+                            </p>
+                        </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 text-center">
-                        <div class="text-3xl mb-2">💰</div>
-                        <h3 class="text-gray-600 text-sm">Ingresos Est.</h3>
-                        <p class="text-2xl font-bold text-gray-800">$${(appointments.length * 500).toLocaleString()}</p>
+                    <div class="glass-card rounded-2xl p-6 stats-card">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm mb-2">Tasa Confirmación</p>
+                                <h3 class="text-3xl font-bold text-gray-800" id="confirmation-rate">0%</h3>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-xl">
+                                <i class="fas fa-percentage text-purple-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <p class="text-gray-500 text-sm">Basado en últimos 30 días</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    <!-- Calendario Interactivo -->
-                    <div class="xl:col-span-2 fade-in">
-                        <div class="glass-card rounded-2xl p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Gráfica de Servicios Populares -->
+                    <div class="lg:col-span-2 fade-in">
+                        <div class="glass-card rounded-2xl p-6 h-full">
                             <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-xl font-bold text-gray-800">📅 Calendario de Citas</h2>
-                                <div class="flex space-x-2">
-                                    <button onclick="changeView('month')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Mes</button>
-                                    <button onclick="changeView('week')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Semana</button>
-                                    <button onclick="changeView('day')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">Día</button>
+                                <div>
+                                    <h2 class="text-xl font-bold text-gray-800">📈 Servicios Más Solicitados</h2>
+                                    <p class="text-gray-500 text-sm">Basado en datos del onboarding</p>
+                                </div>
+                                <div class="bg-blue-50 px-4 py-2 rounded-lg">
+                                    <span class="text-blue-700 font-medium">Actualizado</span>
                                 </div>
                             </div>
-
-                            <!-- Navegación del Calendario -->
-                            <div class="flex justify-between items-center mb-6">
-                                <button onclick="previousPeriod()" class="p-2 hover:bg-gray-100 rounded-lg transition">
-                                    <span class="text-xl">←</span>
-                                </button>
-                                <h3 id="calendar-title" class="text-lg font-bold text-gray-800">Cargando...</h3>
-                                <button onclick="nextPeriod()" class="p-2 hover:bg-gray-100 rounded-lg transition">
-                                    <span class="text-xl">→</span>
-                                </button>
-                            </div>
-
-                            <!-- Calendario Grid -->
-                            <div id="calendar-container" class="grid grid-cols-7 gap-2 mb-4">
-                                <!-- Los días se cargan con JavaScript -->
-                            </div>
-
-                            <!-- Leyenda -->
-                            <div class="flex justify-center space-x-4 text-sm">
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                                    <span class="text-gray-600">Con citas</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-gray-200 rounded-full mr-2"></div>
-                                    <span class="text-gray-600">Sin citas</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Gráfica de Rendimiento -->
-                        <div class="glass-card rounded-2xl p-6 mt-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-6">📊 Rendimiento Semanal</h2>
-                            <div class="h-64">
-                                <canvas id="performanceChart"></canvas>
+                            <div class="h-72">
+                                <canvas id="servicesChart"></canvas>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Panel de Citas y Gestión -->
-                    <div class="space-y-6 fade-in">
-                        <!-- Citas del Día Seleccionado -->
-                        <div class="glass-card rounded-2xl p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4" id="selected-date-title">📋 Citas de Hoy</h2>
-                            <div id="appointments-list" class="space-y-3 max-h-96 overflow-y-auto">
-                                <!-- Las citas se cargan dinámicamente -->
+                    <!-- Servicios Activos -->
+                    <div class="fade-in">
+                        <div class="glass-card rounded-2xl p-6 h-full">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-bold text-gray-800">⚡ Servicios Activos</h2>
+                                <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
+                                    ${businessServices.filter(s => s.active).length} activos
+                                </span>
+                            </div>
+                            <div class="space-y-4 max-h-72 overflow-y-auto pr-2">
+                                ${businessServices.slice(0, 5).map(service => `
+                                    <div class="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                                        <div class="service-icon ${getServiceIconClass(service)}">
+                                            <i class="${getServiceIcon(service)}"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h4 class="font-medium text-gray-800">${service.name}</h4>
+                                            <p class="text-sm text-gray-500">$${service.price} • ${service.duration || 30} min</p>
+                                        </div>
+                                        <span class="px-3 py-1 text-xs rounded-full ${service.active ? 'badge-active' : 'badge-inactive'}">
+                                            ${service.active ? 'Activo' : 'Inactivo'}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                                ${businessServices.length > 5 ? `
+                                    <div class="text-center pt-2">
+                                        <a href="javascript:void(0)" onclick="switchTab('services')" 
+                                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                            Ver todos los ${businessServices.length} servicios →
+                                        </a>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Acciones Rápidas -->
-                        <div class="glass-card rounded-2xl p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ Acciones Rápidas</h2>
-                            <div class="grid grid-cols-2 gap-3">
-                                <button onclick="showQuickAction('accept')" class="p-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-semibold">
-                                    ✅ Aceptar
-                                </button>
-                                <button onclick="showQuickAction('reject')" class="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm font-semibold">
-                                    ❌ Rechazar
-                                </button>
-                                <button onclick="showQuickAction('reschedule')" class="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-semibold">
-                                    🕒 Reprogramar
-                                </button>
-                                <button onclick="showQuickAction('urgent')" class="p-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm font-semibold">
-                                    🚨 Urgencia
-                                </button>
-                            </div>
+                <!-- Calendario Mini -->
+                <div class="glass-card rounded-2xl p-6 mt-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">📅 Calendario Interactivo</h2>
+                        <div class="flex space-x-2">
+                            <button onclick="changeView('month')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Mes</button>
+                            <button onclick="changeView('week')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">Semana</button>
                         </div>
-
-                        <!-- Información del Negocio -->
-                        <div class="glass-card rounded-2xl p-6">
-                            <h2 class="text-xl font-bold text-gray-800 mb-4">🏢 Información</h2>
-                            <div class="space-y-3">
-                                <div>
-                                    <p class="text-sm text-gray-600">WhatsApp Business</p>
-                                    <p class="font-bold text-gray-800">${business.whatsappBusiness}</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm text-gray-600">Tipo de Negocio</p>
-                                    <p class="font-bold text-gray-800 capitalize">${business.businessType}</p>
-                                </div>
-                                <div class="pt-3 border-t border-gray-200">
-                                    <p class="text-sm text-gray-600">Citas Totales</p>
-                                    <p class="text-2xl font-bold text-yellow-600">${appointments.length}</p>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
+                    <div id="mini-calendar-container" class="grid grid-cols-7 gap-1">
+                        <!-- Calendario se cargará aquí -->
                     </div>
                 </div>
             </div>
-            
+
             <!-- Pestaña Servicios -->
             <div id="services-tab" class="tab-content hidden">
                 <div class="glass-card rounded-2xl p-6 mb-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">🛠️ Gestión de Servicios</h2>
-                        <button onclick="showAddServiceModal()" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
-                            <span class="mr-2">+</span> Agregar Servicio
-                        </button>
-                    </div>
-                    
-                    <!-- Lista de Servicios -->
-                    <div id="services-container" class="space-y-4">
-                        <div class="text-center py-8 text-gray-500">
-                            <div class="animate-pulse">
-                                <div class="h-4 bg-gray-200 rounded w-1/4 mx-auto mb-2"></div>
-                                <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                            </div>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">🛠️ Servicios del Onboarding</h2>
+                            <p class="text-gray-500">Gestión completa de servicios configurados durante el onboarding</p>
+                        </div>
+                        <div class="flex space-x-3">
+                            <button onclick="exportServices()"
+                                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center space-x-2">
+                                <i class="fas fa-download"></i>
+                                <span>Exportar</span>
+                            </button>
+                            <button onclick="showAddServiceModal()"
+                                    class="btn-primary flex items-center space-x-2">
+                                <i class="fas fa-plus"></i>
+                                <span>Nuevo Servicio</span>
+                            </button>
                         </div>
                     </div>
-                    
-                    <!-- Información Premium -->
-                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+
+                    <!-- Filtros y Búsqueda -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="flex-1">
+                            <div class="relative">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                <input type="text" 
+                                       id="service-search" 
+                                       placeholder="Buscar servicios por nombre, categoría o descripción..." 
+                                       class="input-field pl-10"
+                                       onkeyup="filterServices()">
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <select id="category-filter" class="input-field" onchange="filterServices()">
+                                <option value="">Todas las categorías</option>
+                                <option value="dentist">Dentista General</option>
+                                <option value="cleaning">Limpieza</option>
+                                <option value="whitening">Blanqueamiento</option>
+                                <option value="implants">Implantes</option>
+                                <option value="general">General</option>
+                            </select>
+                            <select id="status-filter" class="input-field" onchange="filterServices()">
+                                <option value="">Todos los estados</option>
+                                <option value="active">Activos</option>
+                                <option value="inactive">Inactivos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas de Servicios -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-xl">
+                            <p class="text-blue-700 text-sm font-medium">Total Servicios</p>
+                            <p class="text-2xl font-bold text-blue-900" id="total-services">${businessServices.length}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl">
+                            <p class="text-green-700 text-sm font-medium">Servicios Activos</p>
+                            <p class="text-2xl font-bold text-green-900" id="active-services">${businessServices.filter(s => s.active).length}</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-xl">
+                            <p class="text-yellow-700 text-sm font-medium">Con Pago Online</p>
+                            <p class="text-2xl font-bold text-yellow-900" id="online-payment">${businessServices.filter(s => s.requiresPayment).length}</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-xl">
+                            <p class="text-purple-700 text-sm font-medium">Ingreso Promedio</p>
+                            <p class="text-2xl font-bold text-purple-900" id="avg-price">$${businessServices.length > 0 ? Math.round(businessServices.reduce((a,b) => a + (b.price || 0), 0) / businessServices.length) : 0}</p>
+                        </div>
+                    </div>
+
+                    <!-- Lista de Servicios -->
+                    <div id="services-container">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="services-grid">
+                            ${businessServices.map(service => renderServiceCard(service)).join('')}
+                        </div>
+                    </div>
+
+                    ${businessServices.length === 0 ? `
+                        <div class="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl">
+                            <div class="text-gray-400 text-6xl mb-4">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <h3 class="text-xl font-medium text-gray-600 mb-2">No hay servicios configurados</h3>
+                            <p class="text-gray-500 mb-6">Comienza agregando tus primeros servicios desde el onboarding</p>
+                            <button onclick="showAddServiceModal()"
+                                    class="btn-primary px-6 py-3">
+                                <i class="fas fa-plus mr-2"></i>
+                                Agregar Primer Servicio
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    <!-- Nota de Integración -->
+                    <div class="mt-8 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
                         <div class="flex items-start">
-                            <div class="mr-3 text-blue-600">💡</div>
+                            <div class="mr-4 text-2xl text-blue-600">
+                                <i class="fas fa-link"></i>
+                            </div>
                             <div>
-                                <p class="font-medium text-blue-800">Arquitectura Premium Activada</p>
-                                <p class="text-sm text-blue-600 mt-1">
-                                    Cada servicio incluye: precio editable, precio sugerido, 
-                                    opción de pago online, categoría y analytics.
+                                <p class="font-medium text-blue-900 text-lg">Integración Completa con Bot</p>
+                                <p class="text-blue-700 mt-1">
+                                    Estos servicios están disponibles automáticamente en tu bot de WhatsApp. 
+                                    Los clientes pueden consultar precios, horarios y agendar citas directamente.
                                 </p>
+                                <div class="mt-3 flex items-center space-x-4 text-sm">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                                        <i class="fas fa-robot mr-1"></i> Bot Conectado
+                                    </span>
+                                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                                        <i class="fas fa-sync-alt mr-1"></i> Sincronización Activa
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Otras pestañas... -->
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar servicio -->
+    <div id="service-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-6 border-b border-gray-200">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800">Nuevo Servicio</h3>
+                <p id="modal-subtitle" class="text-gray-500 text-sm mt-1">Configura los detalles del servicio</p>
+            </div>
             
-            <!-- Otras pestañas (calendar, appointments) se manejarán similarmente -->
+            <div class="p-6">
+                <form id="service-form" onsubmit="handleServiceSubmit(event)">
+                    <input type="hidden" id="service-id">
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Nombre del Servicio *</label>
+                            <input type="text" 
+                                   id="service-name" 
+                                   class="input-field" 
+                                   placeholder="Ej: Limpieza dental profesional"
+                                   required>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Descripción</label>
+                            <textarea id="service-description" 
+                                     class="input-field h-24" 
+                                     placeholder="Describe el servicio para los clientes..."></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Duración (minutos)</label>
+                                <input type="number" 
+                                       id="service-duration" 
+                                       class="input-field" 
+                                       value="30" 
+                                       min="5" 
+                                       max="480" 
+                                       required>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Precio ($)</label>
+                                <input type="number" 
+                                       id="service-price" 
+                                       class="input-field" 
+                                       value="1000" 
+                                       min="0" 
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Categoría</label>
+                                <select id="service-category" class="input-field">
+                                    <option value="general">General</option>
+                                    <option value="dentist">Dentista</option>
+                                    <option value="cleaning">Limpieza</option>
+                                    <option value="whitening">Blanqueamiento</option>
+                                    <option value="implants">Implantes</option>
+                                    <option value="orthodontics">Ortodoncia</option>
+                                    <option value="surgery">Cirugía</option>
+                                    <option value="emergency">Emergencia</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-gray-700 text-sm font-medium mb-2">Tipo de Pago</label>
+                                <select id="service-payment-type" class="input-field">
+                                    <option value="office">Pago en consultorio</option>
+                                    <option value="online">Pago online disponible</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       id="service-active" 
+                                       class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                <label for="service-active" class="ml-2 text-gray-700 text-sm">
+                                    Servicio activo y disponible
+                                </label>
+                            </div>
+
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                       id="service-commission" 
+                                       class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                                <label for="service-commission" class="ml-2 text-gray-700 text-sm">
+                                    Incluir comisión (%)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="commission-field" class="hidden">
+                            <label class="block text-gray-700 text-sm font-medium mb-2">Porcentaje de Comisión</label>
+                            <input type="number" 
+                                   id="service-commission-value" 
+                                   class="input-field" 
+                                   value="10" 
+                                   min="0" 
+                                   max="50">
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-3">
+                        <button type="button" 
+                                onclick="closeServiceModal()"
+                                class="btn-secondary px-6">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="btn-primary px-6">
+                            <span id="modal-submit-text">Guardar Servicio</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
         // Datos globales
         const businessId = '${business._id}';
+        const businessSlug = '${business.slug || business._id}';
         const businessPlan = '${business.plan}';
         const appointments = ${JSON.stringify(appointments)};
         const calendarData = ${JSON.stringify(calendarData)};
+        let businessServices = ${JSON.stringify(businessServices)};
+        let filteredServices = [...businessServices];
 
         let currentDate = moment();
         let currentView = 'month';
         let selectedDate = moment().format('YYYY-MM-DD');
         let selectedAppointment = null;
-        let businessServices = [];
+        let editingServiceId = null;
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             moment.locale('es');
             updateStats();
-            renderCalendar();
-            renderAppointmentsList();
-            initChart();
             initTabs();
-            loadBusinessServices();
+            initChart();
+            renderServicesGrid();
+            initMiniCalendar();
+            
+            // Escuchar cambios en checkboxes
+            document.getElementById('service-commission').addEventListener('change', function() {
+                document.getElementById('commission-field').classList.toggle('hidden', !this.checked);
+            });
         });
 
         // =============================================
-        // GESTIÓN DE TABS
+        // FUNCIONES DE SERVICIOS
         // =============================================
-        
+
+        function renderServiceCard(service) {
+            const iconClass = getServiceIconClass(service);
+            const icon = getServiceIcon(service);
+            const paymentBadge = service.requiresPayment ? 'badge-online' : 'badge-office';
+            const paymentText = service.requiresPayment ? '💳 Pago Online' : '🏥 Pago Consultorio';
+            const isActive = service.active ? 'badge-active' : 'badge-inactive';
+            const statusText = service.active ? 'Activo' : 'Inactivo';
+            
+            return \`
+                <div class="service-card glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-300" data-service-id="\${service._id}">
+                    <div class="flex items-start mb-4">
+                        <div class="service-icon \${iconClass} flex-shrink-0">
+                            <i class="\${icon}"></i>
+                        </div>
+                        <div class="flex-1 ml-4">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg text-gray-800 truncate">\${service.name}</h3>
+                                <span class="text-xl font-bold text-gray-800">$\${service.price}</span>
+                            </div>
+                            \${service.description ? \`
+                                <p class="text-gray-600 text-sm mt-2 line-clamp-2">\${service.description}</p>
+                            \` : ''}
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="service-badge \${isActive}">
+                            \${statusText}
+                        </span>
+                        <span class="service-badge \${paymentBadge}">
+                            \${paymentText}
+                        </span>
+                        <span class="service-badge bg-blue-100 text-blue-800">
+                            ⏱️ \${service.duration || 30} min
+                        </span>
+                        <span class="service-badge bg-purple-100 text-purple-800">
+                            📁 \${service.category || 'general'}
+                        </span>
+                        \${service.commission > 0 ? \`
+                            <span class="service-badge bg-pink-100 text-pink-800">
+                                👑 \${service.commission}%
+                            </span>
+                        \` : ''}
+                    </div>
+
+                    <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                        <div class="text-sm text-gray-500">
+                            \${service.createdAt ? \`Creado: \${moment(service.createdAt).format('DD/MM/YY')}\` : 'Sin fecha'}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editService('\${service._id}')"
+                                    class="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
+                                <i class="fas fa-edit mr-1"></i> Editar
+                            </button>
+                            <button onclick="deleteService('\${service._id}')"
+                                    class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
+                                <i class="fas fa-trash mr-1"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            \`;
+        }
+
+        function renderServicesGrid() {
+            const container = document.getElementById('services-grid');
+            if (!container) return;
+            
+            container.innerHTML = filteredServices.map(service => renderServiceCard(service)).join('');
+            
+            // Actualizar estadísticas
+            document.getElementById('total-services').textContent = businessServices.length;
+            document.getElementById('active-services').textContent = businessServices.filter(s => s.active).length;
+            document.getElementById('online-payment').textContent = businessServices.filter(s => s.requiresPayment).length;
+            
+            const avgPrice = businessServices.length > 0 
+                ? Math.round(businessServices.reduce((a,b) => a + (b.price || 0), 0) / businessServices.length)
+                : 0;
+            document.getElementById('avg-price').textContent = '\$' + avgPrice;
+        }
+
+        function filterServices() {
+            const searchTerm = document.getElementById('service-search').value.toLowerCase();
+            const categoryFilter = document.getElementById('category-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            filteredServices = businessServices.filter(service => {
+                const matchesSearch = !searchTerm || 
+                    service.name.toLowerCase().includes(searchTerm) ||
+                    (service.description && service.description.toLowerCase().includes(searchTerm)) ||
+                    (service.category && service.category.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !categoryFilter || service.category === categoryFilter;
+                const matchesStatus = !statusFilter || 
+                    (statusFilter === 'active' && service.active) ||
+                    (statusFilter === 'inactive' && !service.active);
+                
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+            
+            renderServicesGrid();
+        }
+
+        function showAddServiceModal() {
+            editingServiceId = null;
+            document.getElementById('modal-title').textContent = 'Nuevo Servicio';
+            document.getElementById('modal-subtitle').textContent = 'Configura los detalles del servicio';
+            document.getElementById('modal-submit-text').textContent = 'Guardar Servicio';
+            
+            // Reset form
+            document.getElementById('service-form').reset();
+            document.getElementById('service-id').value = '';
+            document.getElementById('service-duration').value = '30';
+            document.getElementById('service-price').value = '1000';
+            document.getElementById('service-category').value = 'general';
+            document.getElementById('service-payment-type').value = 'office';
+            document.getElementById('service-active').checked = true;
+            document.getElementById('service-commission').checked = false;
+            document.getElementById('commission-field').classList.add('hidden');
+            
+            document.getElementById('service-modal-overlay').classList.add('active');
+        }
+
+        function editService(serviceId) {
+            const service = businessServices.find(s => s._id === serviceId);
+            if (!service) return;
+            
+            editingServiceId = serviceId;
+            document.getElementById('modal-title').textContent = 'Editar Servicio';
+            document.getElementById('modal-subtitle').textContent = 'Modifica los detalles del servicio';
+            document.getElementById('modal-submit-text').textContent = 'Actualizar Servicio';
+            
+            // Fill form
+            document.getElementById('service-id').value = service._id;
+            document.getElementById('service-name').value = service.name;
+            document.getElementById('service-description').value = service.description || '';
+            document.getElementById('service-duration').value = service.duration || 30;
+            document.getElementById('service-price').value = service.price || 0;
+            document.getElementById('service-category').value = service.category || 'general';
+            document.getElementById('service-payment-type').value = service.requiresPayment ? 'online' : 'office';
+            document.getElementById('service-active').checked = service.active !== false;
+            document.getElementById('service-commission').checked = !!service.commission;
+            document.getElementById('service-commission-value').value = service.commission || 10;
+            
+            if (service.commission) {
+                document.getElementById('commission-field').classList.remove('hidden');
+            }
+            
+            document.getElementById('service-modal-overlay').classList.add('active');
+        }
+
+        async function handleServiceSubmit(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('service-name').value,
+                description: document.getElementById('service-description').value,
+                duration: parseInt(document.getElementById('service-duration').value),
+                price: parseInt(document.getElementById('service-price').value),
+                category: document.getElementById('service-category').value,
+                requiresPayment: document.getElementById('service-payment-type').value === 'online',
+                active: document.getElementById('service-active').checked,
+                customService: true,
+                basePrice: parseInt(document.getElementById('service-price').value)
+            };
+            
+            const hasCommission = document.getElementById('service-commission').checked;
+            if (hasCommission) {
+                formData.commission = parseInt(document.getElementById('service-commission-value').value);
+            }
+            
+            try {
+                let url = \`/api/business/\${businessSlug}/services\`;
+                let method = 'POST';
+                
+                if (editingServiceId) {
+                    url += \`/\${editingServiceId}\`;
+                    method = 'PUT';
+                }
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeServiceModal();
+                    
+                    // Recargar servicios
+                    const businessResponse = await fetch(\`/api/business/\${businessSlug}\`);
+                    const updatedBusiness = await businessResponse.json();
+                    businessServices = updatedBusiness.services || [];
+                    filteredServices = [...businessServices];
+                    
+                    renderServicesGrid();
+                    updateStats();
+                    initChart();
+                    
+                    showToast('¡Servicio guardado exitosamente!', 'success');
+                } else {
+                    throw new Error(result.error || 'Error al guardar');
+                }
+                
+            } catch (error) {
+                console.error('Error al guardar servicio:', error);
+                showToast('Error al guardar el servicio', 'error');
+            }
+        }
+
+        function closeServiceModal() {
+            document.getElementById('service-modal-overlay').classList.remove('active');
+        }
+
+        async function deleteService(serviceId) {
+            if (!confirm('¿Estás seguro de eliminar este servicio? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(\`/api/business/\${businessSlug}/services/\${serviceId}\`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Error al eliminar servicio');
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    // Actualizar lista local
+                    businessServices = businessServices.filter(s => s._id !== serviceId);
+                    filteredServices = filteredServices.filter(s => s._id !== serviceId);
+                    
+                    renderServicesGrid();
+                    updateStats();
+                    initChart();
+                    
+                    showToast('Servicio eliminado exitosamente', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Error eliminando servicio:', error);
+                showToast('Error al eliminar el servicio', 'error');
+            }
+        }
+
+        function exportServices() {
+            const dataStr = JSON.stringify(businessServices, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = \`servicios-\${businessSlug}-\${moment().format('YYYY-MM-DD')}.json\`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // =============================================
+        // FUNCIONES AUXILIARES
+        // =============================================
+
+        function getServiceIconClass(service) {
+            const category = service.category || 'general';
+            switch(category) {
+                case 'dentist': return 'service-dentist';
+                case 'cleaning': return 'service-cleaning';
+                case 'whitening': return 'service-whitening';
+                case 'implants': return 'service-implants';
+                case 'orthodontics': return 'service-dentist';
+                case 'surgery': return 'service-implants';
+                case 'emergency': return 'service-general';
+                default: return 'service-general';
+            }
+        }
+
+        function getServiceIcon(service) {
+            const category = service.category || 'general';
+            switch(category) {
+                case 'dentist': return 'fas fa-tooth';
+                case 'cleaning': return 'fas fa-broom';
+                case 'whitening': return 'fas fa-star';
+                case 'implants': return 'fas fa-teeth';
+                case 'orthodontics': return 'fas fa-teeth-open';
+                case 'surgery': return 'fas fa-syringe';
+                case 'emergency': return 'fas fa-ambulance';
+                default: return 'fas fa-stethoscope';
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            // Crear toast
+            const toast = document.createElement('div');
+            toast.className = \`fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 transform translate-x-full transition-transform duration-300 \${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+            }\`;
+            toast.textContent = message;
+            toast.id = 'toast-' + Date.now();
+            
+            document.body.appendChild(toast);
+            
+            // Mostrar
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 10);
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // =============================================
+        // FUNCIONES EXISTENTES (actualizadas)
+        // =============================================
+
+        function updateStats() {
+            const today = moment().format('YYYY-MM-DD');
+            const todayAppointments = appointments.filter(apt =>
+                moment(apt.dateTime).format('YYYY-MM-DD') === today
+            );
+            const confirmedAppointments = appointments.filter(apt => apt.status === 'confirmed');
+            const confirmationRate = appointments.length > 0 
+                ? Math.round((confirmedAppointments.length / appointments.length) * 100)
+                : 0;
+
+            document.getElementById('today-count').textContent = todayAppointments.length;
+            document.getElementById('confirmation-rate').textContent = confirmationRate + '%';
+        }
+
         function initTabs() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -371,338 +1112,146 @@ router.get('/:identifier', async (req, res) => {
                 });
             });
         }
-        
+
         function switchTab(tabName) {
             // Actualizar botones activos
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 if (btn.getAttribute('data-tab') === tabName) {
-                    btn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
-                    btn.classList.remove('text-gray-600', 'hover:bg-white/50');
+                    btn.classList.remove('bg-gray-800/50', 'text-white', 'hover:bg-white/10');
+                    btn.classList.add('bg-white', 'text-blue-900', 'shadow-lg');
                 } else {
-                    btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
-                    btn.classList.add('text-gray-600', 'hover:bg-white/50');
+                    btn.classList.remove('bg-white', 'text-blue-900', 'shadow-lg');
+                    btn.classList.add('bg-gray-800/50', 'text-white', 'hover:bg-white/10');
                 }
             });
-            
+
             // Mostrar/ocultar contenido
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
                 content.classList.remove('active');
             });
-            
+
             const activeTab = document.getElementById(tabName + '-tab');
             if (activeTab) {
                 activeTab.classList.remove('hidden');
                 activeTab.classList.add('active');
-                
+
                 // Cargar servicios si es la pestaña de servicios
                 if (tabName === 'services') {
-                    loadBusinessServices();
+                    renderServicesGrid();
                 }
             }
-        }
-        
-        // =============================================
-        // GESTIÓN DE SERVICIOS
-        // =============================================
-        
-        async function loadBusinessServices() {
-            try {
-                const response = await fetch(\`/api/business/\${businessId}/services\`);
-                businessServices = await response.json();
-                renderServicesList();
-            } catch (error) {
-                console.error('Error cargando servicios:', error);
-                document.getElementById('services-container').innerHTML = \`
-                    <div class="text-center py-8 text-red-500">
-                        <p>Error cargando servicios</p>
-                        <button onclick="loadBusinessServices()" class="mt-2 text-blue-600 hover:underline">
-                            Reintentar
-                        </button>
-                    </div>
-                \`;
-            }
-        }
-        
-        function renderServicesList() {
-            const container = document.getElementById('services-container');
-            
-            if (!businessServices || businessServices.length === 0) {
-                container.innerHTML = \`
-                    <div class="text-center py-8 text-gray-500">
-                        <p class="mb-4">No hay servicios configurados</p>
-                        <button onclick="showAddServiceModal()" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                            + Agregar primer servicio
-                        </button>
-                    </div>
-                \`;
-                return;
-            }
-            
-            container.innerHTML = businessServices.map(service => \`
-                <div class="service-item glass-card rounded-xl p-4" data-service-id="\${service._id}">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-bold text-lg text-gray-800">\${service.name}</h3>
-                                <span class="px-2 py-1 text-xs rounded-full \${service.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                                    \${service.active ? 'Activo' : 'Inactivo'}
-                                </span>
-                            </div>
-                            
-                            \${service.description ? \`<p class="text-gray-600 mb-3">\${service.description}</p>\` : ''}
-                            
-                            <div class="flex flex-wrap gap-2">
-                                <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                                    ⏱️ \${service.duration || 30} min
-                                </span>
-                                <span class="text-sm \${service.price > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} px-3 py-1 rounded-full">
-                                    💰 $\${service.price || 0}
-                                    \${service.basePrice > 0 && service.price === 0 ? \` (Sugerido: $\${service.basePrice})\` : ''}
-                                </span>
-                                <span class="text-sm \${service.requiresPayment ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'} px-3 py-1 rounded-full">
-                                    \${service.requiresPayment ? '💳 Pago online' : '🏥 Pago consultorio'}
-                                </span>
-                                <span class="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">
-                                    📁 \${service.category || 'general'}
-                                </span>
-                                \${service.commission > 0 ? \`
-                                    <span class="text-sm bg-pink-100 text-pink-800 px-3 py-1 rounded-full">
-                                        👑 Comisión: \${service.commission}%
-                                    </span>
-                                \` : ''}
-                            </div>
-                        </div>
-                        <div class="ml-4 flex flex-col space-y-2">
-                            <button onclick="editService('\${service._id}')" 
-                                    class="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm">
-                                Editar
-                            </button>
-                            <button onclick="deleteService('\${service._id}')" 
-                                    class="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            \`).join('');
-        }
-        
-        function showAddServiceModal() {
-            alert('Funcionalidad de agregar servicio - En desarrollo');
-        }
-        
-        function editService(serviceId) {
-            const service = businessServices.find(s => s._id === serviceId);
-            if (service) {
-                alert(\`Editar servicio: \${service.name}\\nID: \${serviceId}\`);
-            }
-        }
-        
-        async function deleteService(serviceId) {
-            if (!confirm('¿Estás seguro de eliminar este servicio?')) return;
-            
-            try {
-                const response = await fetch(\`/api/business/\${businessId}/services/\${serviceId}\`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    loadBusinessServices();
-                } else {
-                    alert('Error al eliminar servicio');
-                }
-            } catch (error) {
-                console.error('Error eliminando servicio:', error);
-                alert('Error al eliminar servicio');
-            }
-        }
-
-        // =============================================
-        // FUNCIONES EXISTENTES DEL CALENDARIO
-        // =============================================
-        
-        function updateStats() {
-            const today = moment().format('YYYY-MM-DD');
-            const todayAppointments = appointments.filter(apt =>
-                moment(apt.dateTime).format('YYYY-MM-DD') === today
-            );
-            const confirmedAppointments = appointments.filter(apt => apt.status === 'confirmed');
-
-            document.getElementById('today-count').textContent = todayAppointments.length;
-            document.getElementById('confirmed-count').textContent = confirmedAppointments.length;
-        }
-
-        function renderCalendar() {
-            const container = document.getElementById('calendar-container');
-            const title = document.getElementById('calendar-title');
-
-            if (currentView === 'month') {
-                renderMonthView(container, title);
-            }
-        }
-
-        function renderMonthView(container, title) {
-            title.textContent = currentDate.format('MMMM YYYY');
-            container.innerHTML = '';
-
-            ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-                const dayElement = document.createElement('div');
-                dayElement.className = 'text-center font-bold p-2 text-gray-600';
-                dayElement.textContent = day;
-                container.appendChild(dayElement);
-            });
-
-            const startOfMonth = currentDate.clone().startOf('month');
-            const endOfMonth = currentDate.clone().endOf('month');
-            const startDay = startOfMonth.day();
-            const daysInMonth = endOfMonth.date();
-
-            for (let i = 0; i < startDay; i++) {
-                const emptyDay = document.createElement('div');
-                emptyDay.className = 'text-center p-2 text-gray-300';
-                container.appendChild(emptyDay);
-            }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayElement = document.createElement('div');
-                const date = currentDate.clone().date(day);
-                const dateStr = date.format('YYYY-MM-DD');
-                const dayAppointments = calendarData[dateStr] || [];
-                const isToday = dateStr === moment().format('YYYY-MM-DD');
-                const isSelected = dateStr === selectedDate;
-
-                dayElement.className = \`calendar-day text-center p-3 rounded-lg border-2 transition-all \${
-                    dayAppointments.length > 0 ? 'has-appointments text-white' : 'bg-white text-gray-700'
-                } \${
-                    isToday ? 'border-yellow-400' : 'border-transparent'
-                } \${
-                    isSelected ? 'ring-2 ring-blue-500' : ''
-                }\`;
-
-                dayElement.innerHTML = \`
-                    <div class="font-bold">\${day}</div>
-                    \${dayAppointments.length > 0 ?
-                        \`<div class="text-xs mt-1">\${dayAppointments.length} citas</div>\` :
-                        '<div class="text-xs mt-1 text-gray-400">-</div>'
-                    }
-                \`;
-
-                dayElement.onclick = () => selectDate(dateStr);
-                container.appendChild(dayElement);
-            }
-        }
-
-        function selectDate(date) {
-            selectedDate = date;
-            renderCalendar();
-            renderAppointmentsList();
-        }
-
-        function renderAppointmentsList() {
-            const container = document.getElementById('appointments-list');
-            const title = document.getElementById('selected-date-title');
-
-            const dayAppointments = calendarData[selectedDate] || [];
-            title.textContent = \`📋 Citas del \${moment(selectedDate).format('DD/MM/YYYY')}\`;
-
-            if (dayAppointments.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-4">No hay citas para este día</p>';
-                return;
-            }
-
-            container.innerHTML = dayAppointments.map(apt => \`
-                <div class="appointment-item glass-card rounded-lg p-4 cursor-pointer"
-                     onclick="selectAppointment('\${apt._id}')">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <h3 class="font-bold text-gray-800">\${apt.clientName}</h3>
-                            <p class="text-gray-600 text-sm">\${apt.service}</p>
-                            <p class="text-gray-500 text-xs">
-                                \${moment(apt.dateTime).format('HH:mm')} -
-                                <span class="status-badge status-\${apt.status}">\${apt.status}</span>
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-500">\${moment(apt.dateTime).fromNow()}</p>
-                        </div>
-                    </div>
-                </div>
-            \`).join('');
         }
 
         function initChart() {
-            const ctx = document.getElementById('performanceChart').getContext('2d');
-            const last7Days = Array.from({length: 7}, (_, i) =>
-                moment().subtract(i, 'days').format('YYYY-MM-DD')
-            ).reverse();
-
-            const appointmentsByDay = last7Days.map(date =>
-                calendarData[date] ? calendarData[date].length : 0
-            );
-
-            new Chart(ctx, {
-                type: 'bar',
+            const ctx = document.getElementById('servicesChart');
+            if (!ctx) return;
+            
+            const categories = {};
+            businessServices.forEach(service => {
+                const category = service.category || 'general';
+                categories[category] = (categories[category] || 0) + 1;
+            });
+            
+            new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
                 data: {
-                    labels: last7Days.map(date => moment(date).format('ddd DD')),
+                    labels: Object.keys(categories),
                     datasets: [{
-                        label: 'Citas por Día',
-                        data: appointmentsByDay,
-                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
-                        borderColor: 'rgba(245, 158, 11, 1)',
+                        data: Object.values(categories),
+                        backgroundColor: [
+                            '#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'
+                        ],
                         borderWidth: 2,
-                        borderRadius: 8
+                        borderColor: 'white'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
                     plugins: {
                         legend: {
-                            display: false
+                            position: 'right',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = businessServices.length;
+                                    const percentage = Math.round((value / total) * 100);
+                                    return \`\${label}: \${value} servicios (\${percentage}%)\`;
+                                }
+                            }
                         }
                     }
                 }
             });
         }
 
+        function initMiniCalendar() {
+            const container = document.getElementById('mini-calendar-container');
+            if (!container) return;
+            
+            const today = moment();
+            const currentMonth = today.format('MMMM YYYY');
+            const startOfMonth = today.clone().startOf('month');
+            const startDay = startOfMonth.day();
+            const daysInMonth = today.daysInMonth();
+            
+            // Días de la semana
+            ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'text-center text-xs font-medium p-2 text-gray-500';
+                dayElement.textContent = day;
+                container.appendChild(dayElement);
+            });
+            
+            // Días vacíos al inicio
+            for (let i = 0; i < startDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'text-center p-2';
+                container.appendChild(emptyDay);
+            }
+            
+            // Días del mes
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                const date = today.clone().date(day);
+                const dateStr = date.format('YYYY-MM-DD');
+                const dayAppointments = calendarData[dateStr] || [];
+                const isToday = dateStr === moment().format('YYYY-MM-DD');
+                
+                dayElement.className = \`text-center p-2 rounded-lg text-sm font-medium cursor-pointer transition-all \${
+                    dayAppointments.length > 0 
+                        ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                } \${
+                    isToday ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                }\`;
+                
+                dayElement.textContent = day;
+                dayElement.title = dayAppointments.length > 0 
+                    ? \`\${dayAppointments.length} citas\` 
+                    : 'Sin citas';
+                
+                dayElement.onclick = () => {
+                    selectedDate = dateStr;
+                    switchTab('calendar');
+                };
+                
+                container.appendChild(dayElement);
+            }
+        }
+
         function changeView(view) {
             currentView = view;
-            renderCalendar();
-        }
-
-        function previousPeriod() {
-            currentDate.subtract(1, currentView === 'month' ? 'month' : 'week');
-            renderCalendar();
-        }
-
-        function nextPeriod() {
-            currentDate.add(1, currentView === 'month' ? 'month' : 'week');
-            renderCalendar();
-        }
-
-        function selectAppointment(appointmentId) {
-            selectedAppointment = appointmentId;
-            console.log('Cita seleccionada:', appointmentId);
-        }
-
-        function showQuickAction(action) {
-            alert(\`Acción: \${action} - Funcionalidad en desarrollo\`);
+            // En una implementación completa, esto cambiaría la vista del calendario principal
+            showToast('Vista cambiada a ' + view, 'info');
         }
     </script>
 </body>
@@ -714,11 +1263,113 @@ router.get('/:identifier', async (req, res) => {
   }
 });
 
+// Función auxiliar para renderizar tarjetas de servicios
+function renderServiceCard(service) {
+  const iconClass = getServiceIconClass(service.category || 'general');
+  const icon = getServiceIcon(service.category || 'general');
+  const paymentBadge = service.requiresPayment ? 'badge-online' : 'badge-office';
+  const paymentText = service.requiresPayment ? '💳 Pago Online' : '🏥 Pago Consultorio';
+  const isActive = service.active ? 'badge-active' : 'badge-inactive';
+  const statusText = service.active ? 'Activo' : 'Inactivo';
+  
+  return `
+    <div class="service-card glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-300" data-service-id="${service._id}">
+      <div class="flex items-start mb-4">
+        <div class="service-icon ${iconClass} flex-shrink-0">
+          <i class="${icon}"></i>
+        </div>
+        <div class="flex-1 ml-4">
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-lg text-gray-800 truncate">${service.name}</h3>
+            <span class="text-xl font-bold text-gray-800">$${service.price}</span>
+          </div>
+          ${service.description ? `
+            <p class="text-gray-600 text-sm mt-2 line-clamp-2">${service.description}</p>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span class="service-badge ${isActive}">
+          ${statusText}
+        </span>
+        <span class="service-badge ${paymentBadge}">
+          ${paymentText}
+        </span>
+        <span class="service-badge bg-blue-100 text-blue-800">
+          ⏱️ ${service.duration || 30} min
+        </span>
+        <span class="service-badge bg-purple-100 text-purple-800">
+          📁 ${service.category || 'general'}
+        </span>
+        ${service.commission > 0 ? `
+          <span class="service-badge bg-pink-100 text-pink-800">
+            👑 ${service.commission}%
+          </span>
+        ` : ''}
+      </div>
+
+      <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+        <div class="text-sm text-gray-500">
+          ${service.createdAt ? `Creado: ${new Date(service.createdAt).toLocaleDateString('es-ES')}` : 'Sin fecha'}
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="editService('${service._id}')"
+                  class="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
+            <i class="fas fa-edit mr-1"></i> Editar
+          </button>
+          <button onclick="deleteService('${service._id}')"
+                  class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
+            <i class="fas fa-trash mr-1"></i> Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getServiceIconClass(category) {
+  switch(category) {
+    case 'dentist': return 'service-dentist';
+    case 'cleaning': return 'service-cleaning';
+    case 'whitening': return 'service-whitening';
+    case 'implants': return 'service-implants';
+    case 'orthodontics': return 'service-dentist';
+    case 'surgery': return 'service-implants';
+    case 'emergency': return 'service-general';
+    default: return 'service-general';
+  }
+}
+
+function getServiceIcon(category) {
+  switch(category) {
+    case 'dentist': return 'fas fa-tooth';
+    case 'cleaning': return 'fas fa-broom';
+    case 'whitening': return 'fas fa-star';
+    case 'implants': return 'fas fa-teeth';
+    case 'orthodontics': return 'fas fa-teeth-open';
+    case 'surgery': return 'fas fa-syringe';
+    case 'emergency': return 'fas fa-ambulance';
+    default: return 'fas fa-stethoscope';
+  }
+}
+
 // POST - Agregar nuevo servicio
 router.post("/:identifier/services", async (req, res) => {
   try {
     const { identifier } = req.params;
-    const { name, description = "", duration = 30, price = 1000, active = true, category = "general", requiresPayment = false } = req.body;
+    const { 
+      name, 
+      description = "", 
+      duration = 30, 
+      price = 1000, 
+      active = true, 
+      category = "general", 
+      requiresPayment = false,
+      commission = 0,
+      customService = true,
+      basePrice
+    } = req.body;
 
     let business;
     if (mongoose.Types.ObjectId.isValid(identifier)) {
@@ -731,7 +1382,7 @@ router.post("/:identifier/services", async (req, res) => {
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    business.services.push({
+    const newService = {
       name,
       description,
       duration: parseInt(duration),
@@ -739,17 +1390,23 @@ router.post("/:identifier/services", async (req, res) => {
       active,
       category,
       requiresPayment,
-      customService: true,
-      basePrice: parseInt(price), // Para custom, basePrice = price
-      commission: 0,
+      customService,
+      basePrice: parseInt(basePrice || price),
+      commission: parseInt(commission || 0),
       timesBooked: 0,
       revenue: 0,
       createdAt: new Date(),
       updatedAt: new Date()
-    });
+    };
 
+    business.services.push(newService);
     await business.save();
-    res.json({ success: true, services: business.services });
+    
+    res.json({ 
+      success: true, 
+      service: newService,
+      services: business.services 
+    });
   } catch (error) {
     console.error("Error al crear servicio:", error);
     res.status(500).json({ error: "Error interno del servidor" });
@@ -775,21 +1432,38 @@ router.put("/:identifier/services/:serviceId", async (req, res) => {
       return res.status(404).json({ error: "Servicio no encontrado" });
     }
 
-    const { name, description, duration, price, active, category, requiresPayment } = req.body;
+    const { 
+      name, 
+      description, 
+      duration, 
+      price, 
+      active, 
+      category, 
+      requiresPayment,
+      commission,
+      basePrice
+    } = req.body;
 
     if (name !== undefined) service.name = name;
     if (category !== undefined) service.category = category;
     if (requiresPayment !== undefined) service.requiresPayment = requiresPayment;
     if (description !== undefined) service.description = description;
-    if (duration !== undefined) service.duration = duration;
-    if (price !== undefined) service.price = price;
+    if (duration !== undefined) service.duration = parseInt(duration);
+    if (price !== undefined) service.price = parseInt(price);
     if (active !== undefined) service.active = active;
+    if (commission !== undefined) service.commission = parseInt(commission || 0);
+    if (basePrice !== undefined) service.basePrice = parseInt(basePrice);
 
     service.updatedAt = new Date();
     await business.save();
 
-    res.json({ success: true, service });
+    res.json({ 
+      success: true, 
+      service: service.toObject(),
+      services: business.services 
+    });
   } catch (error) {
+    console.error("Error al actualizar servicio:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -808,15 +1482,68 @@ router.delete("/:identifier/services/:serviceId", async (req, res) => {
       return res.status(404).json({ error: "Negocio no encontrado" });
     }
 
-    business.services.id(req.params.serviceId).remove();
+    const service = business.services.id(req.params.serviceId);
+    if (!service) {
+      return res.status(404).json({ error: "Servicio no encontrado" });
+    }
+
+    service.remove();
     await business.save();
 
-    res.json({ success: true, message: "Servicio eliminado" });
+    res.json({ 
+      success: true, 
+      message: "Servicio eliminado",
+      services: business.services 
+    });
   } catch (error) {
+    console.error("Error al eliminar servicio:", error);
     res.status(500).json({ error: error.message });
   }
 });
-}
+
+// GET - Obtener servicios del negocio (para el dashboard)
+router.get("/api/business/:identifier/services", async (req, res) => {
+  try {
+    let business;
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    res.json(business.services || []);
+  } catch (error) {
+    console.error("Error al obtener servicios:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// GET - Obtener información completa del negocio
+router.get("/api/business/:identifier", async (req, res) => {
+  try {
+    let business;
+    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    res.json({
+      ...business.toObject(),
+      services: business.services || []
+    });
+  } catch (error) {
+    console.error("Error al obtener negocio:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 
 module.exports = router;
-
