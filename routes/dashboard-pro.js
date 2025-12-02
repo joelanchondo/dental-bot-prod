@@ -6,6 +6,33 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 
 // GET /dashboard-pro/:businessId - DASHBOARD ULTRA PROFESIONAL
+// 🎨 Funciones helper para iconos de servicios
+function getServiceIconClass(service) {
+  const category = service.category || "general";
+  const colors = {
+    consultation: "bg-blue-100 text-blue-600",
+    cleaning: "bg-green-100 text-green-600",
+    treatment: "bg-purple-100 text-purple-600",
+    surgery: "bg-red-100 text-red-600",
+    emergency: "bg-orange-100 text-orange-600",
+    general: "bg-gray-100 text-gray-600"
+  };
+  return colors[category] || colors.general;
+}
+
+function getServiceIcon(service) {
+  const category = service.category || "general";
+  const icons = {
+    consultation: "fas fa-user-md",
+    cleaning: "fas fa-tooth",
+    treatment: "fas fa-procedures",
+    surgery: "fas fa-syringe",
+    emergency: "fas fa-ambulance",
+    general: "fas fa-stethoscope"
+  };
+  return icons[category] || icons.general;
+}
+
 router.get('/:identifier', async (req, res) => {
   try {
     let business;
