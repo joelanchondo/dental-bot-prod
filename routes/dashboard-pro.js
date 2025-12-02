@@ -413,147 +413,110 @@ router.get('/:identifier', async (req, res) => {
         <div id="tab-contents">
             <!-- Pestaña Overview -->
             <div id="overview-tab" class="tab-content active">
-                <!-- Stats Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 fade-in">
-                    <div class="glass-card rounded-2xl p-6 stats-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-2">Total Servicios</p>
-                                <h3 class="text-3xl font-bold text-gray-800">${businessServices.length}</h3>
+                <!-- Stats Compactas - Horizontal -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+                    <!-- Card 1: Servicios -->
+                    <div class="bg-gradient-to-br from-blue-900 to-blue-800 rounded-xl p-5 border border-blue-700/30 hover:scale-105 transition-transform duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="bg-blue-700/30 p-2 rounded-lg">
+                                <i class="fas fa-cogs text-blue-300 text-xl"></i>
                             </div>
-                            <div class="bg-blue-100 p-3 rounded-xl">
-                                <i class="fas fa-cogs text-blue-600 text-2xl"></i>
-                            </div>
+                            <span class="text-blue-300 text-xs font-medium">ACTIVOS</span>
                         </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-green-600 text-sm flex items-center">
-                                <i class="fas fa-arrow-up mr-1"></i>
-                                Del onboarding
-                            </p>
-                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1">\${businessServices.length}</h3>
+                        <p class="text-blue-200 text-sm">Servicios Totales</p>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 stats-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-2">Citas Hoy</p>
-                                <h3 class="text-3xl font-bold text-gray-800" id="today-count">0</h3>
+                    <!-- Card 2: Citas Hoy -->
+                    <div class="bg-gradient-to-br from-green-900 to-green-800 rounded-xl p-5 border border-green-700/30 hover:scale-105 transition-transform duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="bg-green-700/30 p-2 rounded-lg">
+                                <i class="fas fa-calendar-check text-green-300 text-xl"></i>
                             </div>
-                            <div class="bg-green-100 p-3 rounded-xl">
-                                <i class="fas fa-calendar-check text-green-600 text-2xl"></i>
-                            </div>
+                            <span class="text-green-300 text-xs font-medium">HOY</span>
                         </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-gray-500 text-sm">${moment().format('DD/MM/YYYY')}</p>
-                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1" id="today-count">0</h3>
+                        <p class="text-green-200 text-sm">\${moment().format('DD MMM YYYY')}</p>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 stats-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-2">Ingresos Mensuales</p>
-                                <h3 class="text-3xl font-bold text-gray-800">$${(appointments.length * 500).toLocaleString()}</h3>
+                    <!-- Card 3: Ingresos -->
+                    <div class="bg-gradient-to-br from-yellow-900 to-yellow-800 rounded-xl p-5 border border-yellow-700/30 hover:scale-105 transition-transform duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="bg-yellow-700/30 p-2 rounded-lg">
+                                <i class="fas fa-dollar-sign text-yellow-300 text-xl"></i>
                             </div>
-                            <div class="bg-yellow-100 p-3 rounded-xl">
-                                <i class="fas fa-dollar-sign text-yellow-600 text-2xl"></i>
-                            </div>
+                            <span class="text-yellow-300 text-xs font-medium">MES</span>
                         </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-blue-600 text-sm flex items-center">
-                                <i class="fas fa-chart-line mr-1"></i>
-                                Est. basado en citas
-                            </p>
-                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1">$\${(appointments.length * 500).toLocaleString()}</h3>
+                        <p class="text-yellow-200 text-sm">Ingresos Estimados</p>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-6 stats-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-500 text-sm mb-2">Tasa Confirmación</p>
-                                <h3 class="text-3xl font-bold text-gray-800" id="confirmation-rate">0%</h3>
+                    <!-- Card 4: Confirmación -->
+                    <div class="bg-gradient-to-br from-purple-900 to-purple-800 rounded-xl p-5 border border-purple-700/30 hover:scale-105 transition-transform duration-300">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="bg-purple-700/30 p-2 rounded-lg">
+                                <i class="fas fa-check-circle text-purple-300 text-xl"></i>
                             </div>
-                            <div class="bg-purple-100 p-3 rounded-xl">
-                                <i class="fas fa-percentage text-purple-600 text-2xl"></i>
-                            </div>
+                            <span class="text-purple-300 text-xs font-medium">TASA</span>
                         </div>
-                        <div class="mt-4 pt-4 border-t border-gray-100">
-                            <p class="text-gray-500 text-sm">Basado en últimos 30 días</p>
-                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1" id="confirmation-rate">0%</h3>
+                        <p class="text-purple-200 text-sm">Confirmación</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Gráfica de Servicios Populares -->
-                    <div class="lg:col-span-2 fade-in">
-                        <div class="glass-card rounded-2xl p-6 h-full">
-                            <div class="flex justify-between items-center mb-6">
-                                <div>
-                                    <h2 class="text-xl font-bold text-gray-800">📈 Servicios Más Solicitados</h2>
-                                    <p class="text-gray-500 text-sm">Basado en datos del onboarding</p>
-                                </div>
-                                <div class="bg-blue-50 px-4 py-2 rounded-lg">
-                                    <span class="text-blue-700 font-medium">Actualizado</span>
-                                </div>
-                            </div>
-                            <div class="h-72">
-                                <canvas id="servicesChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Servicios Activos -->
-                    <div class="fade-in">
-                        <div class="glass-card rounded-2xl p-6 h-full">
-                            <div class="flex justify-between items-center mb-6">
-                                <h2 class="text-xl font-bold text-gray-800">⚡ Servicios Activos</h2>
-                                <span class="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
-                                    ${businessServices.filter(s => s.active).length} activos
-                                </span>
-                            </div>
-                            <div class="space-y-4 max-h-72 overflow-y-auto pr-2">
-                                ${businessServices.slice(0, 5).map(service => `
-                                    <div class="flex items-center p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
-                                        <div class="service-icon ${getServiceIconClass(service)}">
-                                            <i class="${getServiceIcon(service)}"></i>
-                                        </div>
-                                        <div class="flex-1">
-                                            <h4 class="font-medium text-gray-800">${service.name}</h4>
-                                            <p class="text-sm text-gray-500">$${service.price} • ${service.duration || 30} min</p>
-                                        </div>
-                                        <span class="px-3 py-1 text-xs rounded-full ${service.active ? 'badge-active' : 'badge-inactive'}">
-                                            ${service.active ? 'Activo' : 'Inactivo'}
-                                        </span>
-                                    </div>
-                                `).join('')}
-                                ${businessServices.length > 5 ? `
-                                    <div class="text-center pt-2">
-                                        <a href="javascript:void(0)" onclick="switchTab('services')" 
-                                           class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                            Ver todos los ${businessServices.length} servicios →
-                                        </a>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Calendario Mini -->
-                <div class="glass-card rounded-2xl p-6 mt-8">
+                <!-- CALENDARIO GRANDE - PROTAGONISTA -->
+                <div class="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-gray-700/50 fade-in">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">📅 Calendario Interactivo</h2>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white flex items-center">
+                                <span class="bg-blue-600 w-1 h-8 rounded-full mr-3"></span>
+                                📅 Calendario de Citas
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1">Vista mensual de todas tus citas programadas</p>
+                        </div>
                         <div class="flex space-x-2">
-                            <button onclick="changeView('month')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Mes</button>
-                            <button onclick="changeView('week')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">Semana</button>
+                            <button onclick="prevMonth()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="nextMonth()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <button onclick="goToToday()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
+                                Hoy
+                            </button>
                         </div>
                     </div>
-                    <div id="mini-calendar-container" class="grid grid-cols-7 gap-1">
-                        <!-- Calendario se cargará aquí -->
+                    
+                    <!-- Calendario Container -->
+                    <div class="bg-gray-800/50 rounded-xl p-4" style="min-height: 600px;">
+                        <div id="calendar-header" class="text-center mb-4">
+                            <h3 class="text-white text-xl font-bold" id="current-month">\${moment().format('MMMM YYYY')}</h3>
+                        </div>
+                        <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                            <!-- El calendario se renderizará aquí con JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Servicios Más Solicitados - Ancho Completo -->
+                <div class="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50 fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white flex items-center">
+                                <span class="bg-green-600 w-1 h-8 rounded-full mr-3"></span>
+                                📈 Servicios Más Solicitados
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1">Basado en tus citas históricas</p>
+                        </div>
+                        <div class="bg-gray-800 px-4 py-2 rounded-lg">
+                            <span class="text-green-400 font-medium text-sm">● Actualizado</span>
+                        </div>
+                    </div>
+                    <div class="h-80">
+                        <canvas id="servicesChart"></canvas>
                     </div>
                 </div>
             </div>
-
-            <!-- Pestaña Servicios -->
             <div id="services-tab" class="tab-content hidden">
                 <div class="glass-card rounded-2xl p-6 mb-8">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -823,6 +786,105 @@ router.get('/:identifier', async (req, res) => {
             initChart();
             renderServicesGrid();
             initMiniCalendar();
+            renderCalendar();
+
+        // =============================================
+        // FUNCIONES DEL CALENDARIO GRANDE
+        // =============================================
+        
+        function renderCalendar() {
+            const year = currentDate.year();
+            const month = currentDate.month();
+            const firstDay = moment([year, month, 1]);
+            const lastDay = moment(firstDay).endOf('month');
+            const startDate = moment(firstDay).startOf('week');
+            const endDate = moment(lastDay).endOf('week');
+            
+            document.getElementById('current-month').textContent = currentDate.format('MMMM YYYY');
+            
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            weekDays.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'text-center text-gray-400 font-semibold text-sm py-2';
+                dayHeader.textContent = day;
+                grid.appendChild(dayHeader);
+            });
+            
+            let day = startDate.clone();
+            while (day.isSameOrBefore(endDate)) {
+                const dayStr = day.format('YYYY-MM-DD');
+                const isCurrentMonth = day.month() === month;
+                const isToday = day.isSame(moment(), 'day');
+                const dayAppointments = appointments.filter(apt => 
+                    moment(apt.dateTime).format('YYYY-MM-DD') === dayStr
+                );
+                
+                const dayCell = document.createElement('div');
+                let classes = 'relative p-3 rounded-lg cursor-pointer transition-all duration-200 ';
+                classes += isCurrentMonth ? 'bg-gray-800 hover:bg-gray-700 ' : 'bg-gray-900/50 opacity-50 ';
+                classes += isToday ? 'ring-2 ring-blue-500 ' : '';
+                classes += dayAppointments.length > 0 ? 'border-l-4 border-green-500' : '';
+                dayCell.className = classes;
+                
+                const dayNum = document.createElement('div');
+                dayNum.className = 'text-white font-semibold mb-1';
+                dayNum.textContent = day.date();
+                dayCell.appendChild(dayNum);
+                
+                if (dayAppointments.length > 0) {
+                    const aptsContainer = document.createElement('div');
+                    aptsContainer.className = 'space-y-1';
+                    
+                    dayAppointments.slice(0, 3).forEach(apt => {
+                        const aptDiv = document.createElement('div');
+                        aptDiv.className = 'text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded truncate';
+                        aptDiv.textContent = moment(apt.dateTime).format('HH:mm') + ' - ' + (apt.clientName || 'Cliente');
+                        aptsContainer.appendChild(aptDiv);
+                    });
+                    
+                    if (dayAppointments.length > 3) {
+                        const moreDiv = document.createElement('div');
+                        moreDiv.className = 'text-xs text-gray-400 text-center';
+                        moreDiv.textContent = '+' + (dayAppointments.length - 3) + ' más';
+                        aptsContainer.appendChild(moreDiv);
+                    }
+                    
+                    dayCell.appendChild(aptsContainer);
+                }
+                
+                dayCell.onclick = () => showDayDetails(dayStr, dayAppointments);
+                grid.appendChild(dayCell);
+                
+                day.add(1, 'day');
+            }
+        }
+        
+        function prevMonth() {
+            currentDate.subtract(1, 'month');
+            renderCalendar();
+        }
+        
+        function nextMonth() {
+            currentDate.add(1, 'month');
+            renderCalendar();
+        }
+        
+        function goToToday() {
+            currentDate = moment();
+            renderCalendar();
+        }
+        
+        function showDayDetails(dayStr, dayAppointments) {
+            if (dayAppointments.length === 0) {
+                showToast('No hay citas programadas para este día', 'info');
+                return;
+            }
+            alert('Citas del día: ' + moment(dayStr).format('DD MMMM YYYY') + '\\n\\n' + 
+                  dayAppointments.map(apt => apt.clientName + ' - ' + moment(apt.dateTime).format('HH:mm')).join('\\n'));
+        }
             
             // Escuchar cambios en checkboxes
             document.getElementById('service-commission').addEventListener('change', function() {
