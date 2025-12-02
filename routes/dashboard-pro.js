@@ -1263,13 +1263,6 @@ router.get('/:identifier', async (req, res) => {
   }
 });
 
-// Función auxiliar para renderizar tarjetas de servicios
-    case 'surgery': return 'fas fa-syringe';
-    case 'emergency': return 'fas fa-ambulance';
-    default: return 'fas fa-stethoscope';
-  }
-}
-
 // POST - Agregar nuevo servicio
 router.post("/:identifier/services", async (req, res) => {
   try {
