@@ -1256,7 +1256,7 @@ router.get('/:identifier', async (req, res) => {
     </script>
 </body>
 </html>
-    \`);
+    `);
   } catch (error) {
     console.error('Error en dashboard pro:', error);
     res.status(500).send('Error cargando dashboard profesional');
