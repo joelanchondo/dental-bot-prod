@@ -715,19 +715,19 @@ router.get('/:identifier', async (req, res) => {
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-blue-900/50 border border-blue-700/30 rounded-xl p-4">
                             <p class="text-blue-300 text-sm mb-1">Total Citas</p>
-                            <p class="text-3xl font-bold text-white" id="total-appointments">\${appointments.length}</p>
+                            <p class="text-3xl font-bold text-white" id="total-appointments">${appointments.length}</p>
                         </div>
                         <div class="bg-yellow-900/50 border border-yellow-700/30 rounded-xl p-4">
                             <p class="text-yellow-300 text-sm mb-1">Pendientes</p>
-                            <p class="text-3xl font-bold text-white" id="pending-appointments">\${appointments.filter(a => a.status === 'pending').length}</p>
+                            <p class="text-3xl font-bold text-white" id="pending-appointments">${appointments.filter(a => a.status === 'pending').length}</p>
                         </div>
                         <div class="bg-green-900/50 border border-green-700/30 rounded-xl p-4">
                             <p class="text-green-300 text-sm mb-1">Confirmadas</p>
-                            <p class="text-3xl font-bold text-white" id="confirmed-appointments">\${appointments.filter(a => a.status === 'confirmed').length}</p>
+                            <p class="text-3xl font-bold text-white" id="confirmed-appointments">${appointments.filter(a => a.status === 'confirmed').length}</p>
                         </div>
                         <div class="bg-purple-900/50 border border-purple-700/30 rounded-xl p-4">
                             <p class="text-purple-300 text-sm mb-1">Hoy</p>
-                            <p class="text-3xl font-bold text-white" id="today-appointments">\${appointments.filter(a => moment(a.dateTime).isSame(moment(), 'day')).length}</p>
+                            <p class="text-3xl font-bold text-white" id="today-appointments">${appointments.filter(a => moment(a.dateTime).isSame(moment(), 'day')).length}</p>
                         </div>
                     </div>
 
