@@ -1,5 +1,5 @@
 const Appointment = require('../models/Appointment');
-const { getBusiness, generateServiceMenu, getServiceByIndex } = require('../utils/botMenuGenerator');
+const { getBusiness, generateServiceMenu, getServiceByIndex, getFormattedPrice } = require('../utils/botMenuGenerator');
 
 // Estado en memoria
 const conversationStates = new Map();

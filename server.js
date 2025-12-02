@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
+app.set("trust proxy", 1);
 
 // 🔒 RATE LIMITING GLOBAL PARA PROTECCIÓN
 const globalLimiter = rateLimit({
@@ -24,6 +25,24 @@ app.use(globalLimiter);
 
 // Middleware
 app.use(cors());
+// Middleware para detectar subdominio
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  
+  // Extraer subdominio si existe
+  if (host.includes('.')) {
+    const subdomain = host.split('.')[0];
+    
+    // Solo procesar si no es 'www' o 'dental-bot-prod'
+    if (!['www', 'dental-bot-prod', 'localhost'].includes(subdomain)) {
+      req.subdomain = subdomain;
+      console.log('🌐 Subdominio detectado:', subdomain);
+    }
+  }
+  
+  next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
