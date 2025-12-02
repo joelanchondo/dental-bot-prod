@@ -111,6 +111,19 @@ const businessSchema = new mongoose.Schema({
   salesAgent: String,
 
 }, { timestamps: true });
+// 🎯 MIDDLEWARE - Generar slug automáticamente
+businessSchema.pre("save", function(next) {
+  if (this.isModified("businessName") || !this.slug) {
+    this.slug = this.businessName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[u0300-u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+  next();
+});
+
 
 // 🎯 MIDDLEWARE MEJORADO - Carga servicios con basePrice
 businessSchema.pre('save', function(next) {

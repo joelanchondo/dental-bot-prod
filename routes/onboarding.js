@@ -67,17 +67,17 @@ router.post('/', async (req, res) => {
     const planConfig = {
       basico: {
         features: { whatsappBot: true, basicAppointments: true },
-        services: [{name: 'Consulta dental'}, {name: 'Limpieza dental'}],
+        services: [{name: 'Consulta dental', price: 0, duration: 30}, {name: 'Limpieza dental', price: 0, duration: 30}],
         schedule: { weekdays: '9:00-18:00', saturday: '9:00-14:00', sunday: 'Cerrado' }
       },
       pro: {
         features: { whatsappBot: true, basicAppointments: true, calendarAccess: true },
-        services: [{name: 'Consulta'}, {name: 'Limpieza'}, {name: 'Extracción'}, {name: 'Resina'}],
+        services: [{name: 'Consulta', price: 0, duration: 30}, {name: 'Limpieza', price: 0, duration: 45}, {name: 'Extracción', price: 0, duration: 30}, {name: 'Resina', price: 0, duration: 60}],
         schedule: { weekdays: '8:00-19:00', saturday: '9:00-15:00', sunday: '10:00-13:00' }
       },
       premium: {
         features: { whatsappBot: true, basicAppointments: true, calendarAccess: true, customBranding: true },
-        services: [{name: 'Consulta'}, {name: 'Limpieza'}, {name: 'Extracción'}, {name: 'Resina'}, {name: 'Corona'}, {name: 'Implante'}],
+        services: [{name: 'Consulta', price: 0, duration: 30}, {name: 'Limpieza', price: 0, duration: 45}, {name: 'Extracción', price: 0, duration: 30}, {name: 'Resina', price: 0, duration: 60}, {name: 'Corona', price: 0, duration: 90}, {name: 'Implante', price: 0, duration: 120}],
         schedule: { weekdays: '8:00-20:00', saturday: '9:00-16:00', sunday: '10:00-14:00' }
       }
     };
