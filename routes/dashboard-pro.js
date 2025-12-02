@@ -5,8 +5,236 @@ const Appointment = require('../models/Appointment');
 const moment = require('moment');
 const mongoose = require('mongoose');
 
-// GET /dashboard-pro/:businessId - DASHBOARD ULTRA PROFESIONAL
-// 🎨 Funciones helper para iconos de servicios
+// =========================================================
+// 1. RUTAS DE API (Deben ir PRIMERO para evitar conflictos)
+// =========================================================
+
+// GET - Obtener servicios del negocio
+router.get("/api/business/:identifier/services", async (req, res) => {
+  try {
+    let business;
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    res.json(business.services || []);
+  } catch (error) {
+    console.error("Error al obtener servicios:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// GET - Obtener citas por mes
+router.get("/api/business/:identifier/appointments", async (req, res) => {
+    try {
+        const { identifier } = req.params;
+        const { month, year } = req.query;
+
+        let business;
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+            business = await Business.findById(identifier);
+        } else {
+            business = await Business.findOne({ slug: identifier });
+        }
+
+        if (!business) {
+            return res.status(404).json({ error: "Negocio no encontrado" });
+        }
+
+        // Calcular rango del mes
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+
+        const appointments = await Appointment.find({
+            businessId: business._id,
+            dateTime: { $gte: startDate, $lte: endDate }
+        }).sort({ dateTime: 1 });
+
+        res.json(appointments);
+    } catch (error) {
+        console.error("Error en API appointments:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+});
+
+// GET - Obtener información completa del negocio (API JSON)
+router.get("/api/business/:identifier", async (req, res) => {
+  try {
+    let business;
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    res.json({
+      ...business.toObject(),
+      services: business.services || []
+    });
+  } catch (error) {
+    console.error("Error al obtener negocio:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// POST - Agregar nuevo servicio
+router.post("/:identifier/services", async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const {
+      name,
+      description = "",
+      duration = 30,
+      price = 1000,
+      active = true,
+      category = "general",
+      requiresPayment = false,
+      commission = 0,
+      customService = true,
+      basePrice
+    } = req.body;
+
+    let business;
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      business = await Business.findById(identifier);
+    } else {
+      business = await Business.findOne({ slug: identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    const newService = {
+      name,
+      description,
+      duration: parseInt(duration),
+      price: parseInt(price),
+      active,
+      category,
+      requiresPayment,
+      customService,
+      basePrice: parseInt(basePrice || price),
+      commission: parseInt(commission || 0),
+      timesBooked: 0,
+      revenue: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    business.services.push(newService);
+    await business.save();
+
+    res.json({
+      success: true,
+      service: newService,
+      services: business.services
+    });
+  } catch (error) {
+    console.error("Error al crear servicio:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// PUT - Actualizar servicio
+router.put("/:identifier/services/:serviceId", async (req, res) => {
+  try {
+    let business;
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    const service = business.services.id(req.params.serviceId);
+    if (!service) {
+      return res.status(404).json({ error: "Servicio no encontrado" });
+    }
+
+    const {
+      name,
+      description,
+      duration,
+      price,
+      active,
+      category,
+      requiresPayment,
+      commission,
+      basePrice
+    } = req.body;
+
+    if (name !== undefined) service.name = name;
+    if (category !== undefined) service.category = category;
+    if (requiresPayment !== undefined) service.requiresPayment = requiresPayment;
+    if (description !== undefined) service.description = description;
+    if (duration !== undefined) service.duration = parseInt(duration);
+    if (price !== undefined) service.price = parseInt(price);
+    if (active !== undefined) service.active = active;
+    if (commission !== undefined) service.commission = parseInt(commission || 0);
+    if (basePrice !== undefined) service.basePrice = parseInt(basePrice);
+
+    service.updatedAt = new Date();
+    await business.save();
+
+    res.json({
+      success: true,
+      service: service.toObject(),
+      services: business.services
+    });
+  } catch (error) {
+    console.error("Error al actualizar servicio:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE - Eliminar servicio
+router.delete("/:identifier/services/:serviceId", async (req, res) => {
+  try {
+    let business;
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
+      business = await Business.findById(req.params.identifier);
+    } else {
+      business = await Business.findOne({ slug: req.params.identifier });
+    }
+
+    if (!business) {
+      return res.status(404).json({ error: "Negocio no encontrado" });
+    }
+
+    // Forma correcta de eliminar subdocumentos en Mongoose moderno
+    business.services.pull({ _id: req.params.serviceId });
+    await business.save();
+
+    res.json({
+      success: true,
+      message: "Servicio eliminado",
+      services: business.services
+    });
+  } catch (error) {
+    console.error("Error al eliminar servicio:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// =========================================================
+// 2. HELPER FUNCTIONS (Para el SSR)
+// =========================================================
+
 function getServiceIconClass(service) {
   const category = service.category || "general";
   const colors = {
@@ -33,59 +261,16 @@ function getServiceIcon(service) {
   return icons[category] || icons.general;
 }
 
-
-function renderServiceCard(service) {
-  const iconClass = getServiceIconClass(service);
-  const icon = getServiceIcon(service);
-  const paymentBadge = service.requiresPayment ? "badge-online" : "badge-office";
-  const paymentText = service.requiresPayment ? "💳 Pago Online" : "🏥 Pago Consultorio";
-  const isActive = service.active ? "badge-active" : "badge-inactive";
-  const statusText = service.active ? "Activo" : "Inactivo";
-  
-  return `
-    <div class="service-card glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-300" data-service-id="${service._id}">
-      <div class="flex items-start mb-4">
-        <div class="service-icon ${iconClass} flex-shrink-0">
-          <i class="${icon}"></i>
-        </div>
-        <div class="flex-1 ml-4">
-          <div class="flex justify-between items-start">
-            <h3 class="font-bold text-lg text-gray-800 truncate">${service.name}</h3>
-            <span class="text-xl font-bold text-gray-800">$${service.price}</span>
-          </div>
-          ${service.description ? `<p class="text-gray-600 text-sm mt-2 line-clamp-2">${service.description}</p>` : ""}
-        </div>
-      </div>
-      <div class="flex flex-wrap gap-2 mb-4">
-        <span class="service-badge ${isActive}">${statusText}</span>
-        <span class="service-badge ${paymentBadge}">${paymentText}</span>
-        <span class="service-badge bg-blue-100 text-blue-800">⏱️ ${service.duration || 30} min</span>
-        <span class="service-badge bg-purple-100 text-purple-800">📁 ${service.category || "general"}</span>
-        ${service.commission > 0 ? `<span class="service-badge bg-pink-100 text-pink-800">👑 ${service.commission}%</span>` : ""}
-      </div>
-      <div class="flex justify-between items-center pt-4 border-t border-gray-100">
-        <div class="text-sm text-gray-500">
-          ${service.createdAt ? `Creado: ${new Date(service.createdAt).toLocaleDateString("es-MX")}` : "Sin fecha"}
-        </div>
-        <div class="flex space-x-2">
-          <button onclick="editService('${service._id}')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium">
-            <i class="fas fa-edit mr-1"></i> Editar
-          </button>
-          <button onclick="deleteService('${service._id}')" class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition text-sm font-medium">
-            <i class="fas fa-trash mr-1"></i> Eliminar
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-}
+// =========================================================
+// 3. RUTA PRINCIPAL DASHBOARD (Debe ir AL FINAL)
+// =========================================================
 
 router.get('/:identifier', async (req, res) => {
   try {
     let business;
 
-    // Buscar por slug primero, luego por ID
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
+    // Buscar por ID o Slug
+    if (mongoose.Types.ObjectId.isValid(req.params.identifier)) {
       business = await Business.findById(req.params.identifier);
     } else {
       business = await Business.findOne({ slug: req.params.identifier });
@@ -107,7 +292,6 @@ router.get('/:identifier', async (req, res) => {
       return acc;
     }, {});
 
-    // Obtener servicios del negocio (del onboarding)
     const businessServices = business.services || [];
 
     res.send(`
@@ -370,7 +554,7 @@ router.get('/:identifier', async (req, res) => {
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="bg-black/20 rounded-full px-4 py-2">
-                        <span class="text-yellow-400 font-bold">${business.plan.toUpperCase()}</span>
+                        <span class="text-yellow-400 font-bold">${business.plan ? business.plan.toUpperCase() : 'STANDARD'}</span>
                     </div>
                     <div class="text-right hidden md:block">
                         <p class="text-white/80 text-sm">Estado del Sistema</p>
@@ -486,11 +670,11 @@ router.get('/:identifier', async (req, res) => {
                             </button>
                         </div>
                     </div>
-                    
+
                     <!-- Calendario Container -->
                     <div class="bg-gray-800/50 rounded-xl p-4" style="min-height: 600px;">
                         <div id="calendar-header" class="text-center mb-4">
-                            <h3 class="text-white text-xl font-bold" id="current-month">\${moment().format('MMMM YYYY')}</h3>
+                            <h3 class="text-white text-xl font-bold" id="current-month">${moment().format('MMMM YYYY')}</h3>
                         </div>
                         <div id="calendar-grid" class="grid grid-cols-7 gap-2">
                             <!-- El calendario se renderizará aquí con JavaScript -->
@@ -543,9 +727,9 @@ router.get('/:identifier', async (req, res) => {
                         <div class="flex-1">
                             <div class="relative">
                                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                                <input type="text" 
-                                       id="service-search" 
-                                       placeholder="Buscar servicios por nombre, categoría o descripción..." 
+                                <input type="text"
+                                       id="service-search"
+                                       placeholder="Buscar servicios por nombre, categoría o descripción..."
                                        class="input-field pl-10"
                                        onkeyup="filterServices()">
                             </div>
@@ -571,31 +755,31 @@ router.get('/:identifier', async (req, res) => {
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div class="bg-blue-50 p-4 rounded-xl">
                             <p class="text-blue-700 text-sm font-medium">Total Servicios</p>
-                            <p class="text-2xl font-bold text-blue-900" id="total-services">${businessServices.length}</p>
+                            <p class="text-2xl font-bold text-blue-900" id="total-services">0</p>
                         </div>
                         <div class="bg-green-50 p-4 rounded-xl">
                             <p class="text-green-700 text-sm font-medium">Servicios Activos</p>
-                            <p class="text-2xl font-bold text-green-900" id="active-services">${businessServices.filter(s => s.active).length}</p>
+                            <p class="text-2xl font-bold text-green-900" id="active-services">0</p>
                         </div>
                         <div class="bg-yellow-50 p-4 rounded-xl">
                             <p class="text-yellow-700 text-sm font-medium">Con Pago Online</p>
-                            <p class="text-2xl font-bold text-yellow-900" id="online-payment">${businessServices.filter(s => s.requiresPayment).length}</p>
+                            <p class="text-2xl font-bold text-yellow-900" id="online-payment">0</p>
                         </div>
                         <div class="bg-purple-50 p-4 rounded-xl">
                             <p class="text-purple-700 text-sm font-medium">Ingreso Promedio</p>
-                            <p class="text-2xl font-bold text-purple-900" id="avg-price">$${businessServices.length > 0 ? Math.round(businessServices.reduce((a,b) => a + (b.price || 0), 0) / businessServices.length) : 0}</p>
+                            <p class="text-2xl font-bold text-purple-900" id="avg-price">$0</p>
                         </div>
                     </div>
 
                     <!-- Lista de Servicios -->
                     <div id="services-container">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="services-grid">
-                            ${businessServices.map(service => renderServiceCard(service)).join('')}
+                            <!-- JS will populate -->
                         </div>
                     </div>
 
-                    ${businessServices.length === 0 ? `
-                        <div class="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl">
+
+                        <div class="text-center py-12 border-2 border-dashed border-gray-200 rounded-2xl hidden" id="no-services-state">
                             <div class="text-gray-400 text-6xl mb-4">
                                 <i class="fas fa-cogs"></i>
                             </div>
@@ -607,7 +791,7 @@ router.get('/:identifier', async (req, res) => {
                                 Agregar Primer Servicio
                             </button>
                         </div>
-                    ` : ''}
+
 
                     <!-- Nota de Integración -->
                     <div class="mt-8 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
@@ -618,7 +802,7 @@ router.get('/:identifier', async (req, res) => {
                             <div>
                                 <p class="font-medium text-blue-900 text-lg">Integración Completa con Bot</p>
                                 <p class="text-blue-700 mt-1">
-                                    Estos servicios están disponibles automáticamente en tu bot de WhatsApp. 
+                                    Estos servicios están disponibles automáticamente en tu bot de WhatsApp.
                                     Los clientes pueden consultar precios, horarios y agendar citas directamente.
                                 </p>
                                 <div class="mt-3 flex items-center space-x-4 text-sm">
@@ -706,7 +890,6 @@ router.get('/:identifier', async (req, res) => {
                         </select>
                         <select id="service-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
                             <option value="">Todos los servicios</option>
-                            ${businessServices.map(s => '<option value="' + s.name + '">' + s.name + '</option>').join('')}
                         </select>
                         <input type="date" id="date-filter-apt" class="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2" onchange="filterAppointments()">
                     </div>
@@ -715,19 +898,19 @@ router.get('/:identifier', async (req, res) => {
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-blue-900/50 border border-blue-700/30 rounded-xl p-4">
                             <p class="text-blue-300 text-sm mb-1">Total Citas</p>
-                            <p class="text-3xl font-bold text-white" id="total-appointments">${appointments.length}</p>
+                            <p class="text-3xl font-bold text-white" id="total-appointments">0</p>
                         </div>
                         <div class="bg-yellow-900/50 border border-yellow-700/30 rounded-xl p-4">
                             <p class="text-yellow-300 text-sm mb-1">Pendientes</p>
-                            <p class="text-3xl font-bold text-white" id="pending-appointments">${appointments.filter(a => a.status === 'pending').length}</p>
+                            <p class="text-3xl font-bold text-white" id="pending-appointments">0</p>
                         </div>
                         <div class="bg-green-900/50 border border-green-700/30 rounded-xl p-4">
                             <p class="text-green-300 text-sm mb-1">Confirmadas</p>
-                            <p class="text-3xl font-bold text-white" id="confirmed-appointments">${appointments.filter(a => a.status === 'confirmed').length}</p>
+                            <p class="text-3xl font-bold text-white" id="confirmed-appointments">0</p>
                         </div>
                         <div class="bg-purple-900/50 border border-purple-700/30 rounded-xl p-4">
                             <p class="text-purple-300 text-sm mb-1">Hoy</p>
-                            <p class="text-3xl font-bold text-white" id="today-appointments">${appointments.filter(a => moment(a.dateTime).isSame(moment(), 'day')).length}</p>
+                            <p class="text-3xl font-bold text-white" id="today-appointments">0</p>
                         </div>
                     </div>
 
@@ -748,15 +931,13 @@ router.get('/:identifier', async (req, res) => {
                         </h2>
                         <p class="text-gray-400 text-sm mt-1">Administra la configuración de tu negocio</p>
                     </div>
-                    
+
                     <div class="text-white text-center py-20">
                         <i class="fas fa-tools text-6xl text-gray-600 mb-4"></i>
                         <p class="text-xl text-gray-400">Próximamente: Configuración de usuario, horarios y más...</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Otras pestañas... -->
         </div>
     </div>
 
@@ -767,47 +948,47 @@ router.get('/:identifier', async (req, res) => {
                 <h3 id="modal-title" class="text-xl font-bold text-gray-800">Nuevo Servicio</h3>
                 <p id="modal-subtitle" class="text-gray-500 text-sm mt-1">Configura los detalles del servicio</p>
             </div>
-            
+
             <div class="p-6">
                 <form id="service-form" onsubmit="handleServiceSubmit(event)">
                     <input type="hidden" id="service-id">
-                    
+
                     <div class="space-y-4">
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-2">Nombre del Servicio *</label>
-                            <input type="text" 
-                                   id="service-name" 
-                                   class="input-field" 
+                            <input type="text"
+                                   id="service-name"
+                                   class="input-field"
                                    placeholder="Ej: Limpieza dental profesional"
                                    required>
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-2">Descripción</label>
-                            <textarea id="service-description" 
-                                     class="input-field h-24" 
+                            <textarea id="service-description"
+                                     class="input-field h-24"
                                      placeholder="Describe el servicio para los clientes..."></textarea>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-gray-700 text-sm font-medium mb-2">Duración (minutos)</label>
-                                <input type="number" 
-                                       id="service-duration" 
-                                       class="input-field" 
-                                       value="30" 
-                                       min="5" 
-                                       max="480" 
+                                <input type="number"
+                                       id="service-duration"
+                                       class="input-field"
+                                       value="30"
+                                       min="5"
+                                       max="480"
                                        required>
                             </div>
 
                             <div>
                                 <label class="block text-gray-700 text-sm font-medium mb-2">Precio ($)</label>
-                                <input type="number" 
-                                       id="service-price" 
-                                       class="input-field" 
-                                       value="1000" 
-                                       min="0" 
+                                <input type="number"
+                                       id="service-price"
+                                       class="input-field"
+                                       value="1000"
+                                       min="0"
                                        required>
                             </div>
                         </div>
@@ -838,8 +1019,8 @@ router.get('/:identifier', async (req, res) => {
 
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center">
-                                <input type="checkbox" 
-                                       id="service-active" 
+                                <input type="checkbox"
+                                       id="service-active"
                                        class="h-4 w-4 text-blue-600 border-gray-300 rounded">
                                 <label for="service-active" class="ml-2 text-gray-700 text-sm">
                                     Servicio activo y disponible
@@ -847,8 +1028,8 @@ router.get('/:identifier', async (req, res) => {
                             </div>
 
                             <div class="flex items-center">
-                                <input type="checkbox" 
-                                       id="service-commission" 
+                                <input type="checkbox"
+                                       id="service-commission"
                                        class="h-4 w-4 text-blue-600 border-gray-300 rounded">
                                 <label for="service-commission" class="ml-2 text-gray-700 text-sm">
                                     Incluir comisión (%)
@@ -858,22 +1039,22 @@ router.get('/:identifier', async (req, res) => {
 
                         <div id="commission-field" class="hidden">
                             <label class="block text-gray-700 text-sm font-medium mb-2">Porcentaje de Comisión</label>
-                            <input type="number" 
-                                   id="service-commission-value" 
-                                   class="input-field" 
-                                   value="10" 
-                                   min="0" 
+                            <input type="number"
+                                   id="service-commission-value"
+                                   class="input-field"
+                                   value="10"
+                                   min="0"
                                    max="50">
                         </div>
                     </div>
 
                     <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-3">
-                        <button type="button" 
+                        <button type="button"
                                 onclick="closeServiceModal()"
                                 class="btn-secondary px-6">
                             Cancelar
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="btn-primary px-6">
                             <span id="modal-submit-text">Guardar Servicio</span>
                         </button>
@@ -884,48 +1065,128 @@ router.get('/:identifier', async (req, res) => {
     </div>
 
     <script>
-        // Datos globales
-        const businessId = '${business._id}';
-        const businessSlug = '${business.slug || business._id}';
-        const businessPlan = '${business.plan}';
-        const appointments = ${JSON.stringify(appointments)};
-        const calendarData = ${JSON.stringify(calendarData)};
-        let businessServices = ${JSON.stringify(businessServices)};
-        let filteredServices = [...businessServices];
+        let businessId = "";
+        let businessSlug = "";
+        let businessPlan = "";
+        
+        const appointments = []; 
+        const calendarData = {}; 
+        let businessServices = []; 
+        let filteredServices = [];
 
         let currentDate = moment();
         let currentView = 'month';
+        let loadedMonths = new Set();
         let selectedDate = moment().format('YYYY-MM-DD');
         let selectedAppointment = null;
         let editingServiceId = null;
+
+        // Cargar datos iniciales
+        async function loadInitialData() {
+            // Extraer slug del URL si es necesario o usar el pathname
+            const pathParts = window.location.pathname.split('/');
+            // Asumimos que la URL es /dashboard-pro/:slug
+            const urlIdentifier = pathParts.pop() || pathParts.pop(); 
+            
+            console.log('=== DEBUG loadInitialData INICIANDO ===');
+
+            try {
+                // Primero obtenemos info básica del negocio
+                const businessRes = await fetch('/api/business/' + urlIdentifier);
+                if (businessRes.ok) {
+                    const businessData = await businessRes.json();
+                    businessId = businessData._id;
+                    businessSlug = businessData.slug || businessData._id;
+                    businessPlan = businessData.plan;
+                    console.log('Business data loaded:', {businessId, businessSlug});
+                } else {
+                    throw new Error('No se pudo cargar la información del negocio');
+                }
+
+                showToast('Cargando datos...', 'info');
+
+                // Ahora cargamos servicios y citas usando el slug confirmado
+                const [servicesRes, appointmentsRes] = await Promise.all([
+                    fetch(\`/api/business/\${businessSlug}/services\`),
+                    fetch(\`/api/business/\${businessSlug}/appointments?month=\${currentDate.month()+1}&year=\${currentDate.year()}\`)
+                ]);
+
+                if (!servicesRes.ok || !appointmentsRes.ok) {
+                    throw new Error('Error en respuesta de API de datos');
+                }
+
+                businessServices = await servicesRes.json();
+                filteredServices = [...businessServices];
+                const appointmentsData = await appointmentsRes.json();
+
+                // Procesar calendarData
+                appointmentsData.forEach(apt => {
+                    const date = moment(apt.dateTime).format('YYYY-MM-DD');
+                    if (!calendarData[date]) calendarData[date] = [];
+                    calendarData[date].push(apt);
+                    appointments.push(apt);
+                });
+
+                // Actualizar UI
+                renderServicesGrid();
+                renderCalendar();
+                updateStats();
+
+                showToast('Datos cargados correctamente', 'success');
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                showToast('Error al cargar datos: ' + error.message, 'error');
+            }
+        }
+
+        // Iniciar carga de datos
+        setTimeout(() => loadInitialData(), 100);
 
         // Inicialización
         document.addEventListener('DOMContentLoaded', function() {
             moment.locale('es');
             updateStats();
             initTabs();
-            initChart();
-            renderServicesGrid();
+            // initChart se llamará cuando tengamos datos
+            // renderServicesGrid se llamará cuando tengamos datos
             initMiniCalendar();
-            renderCalendar();
+            
+            // Escuchar cambios en checkboxes
+            const commCheck = document.getElementById('service-commission');
+            if(commCheck) {
+                commCheck.addEventListener('change', function() {
+                    document.getElementById('commission-field').classList.toggle('hidden', !this.checked);
+                });
+            }
+        });
 
         // =============================================
         // FUNCIONES DEL CALENDARIO GRANDE
         // =============================================
-        
-        function renderCalendar() {
+
+        async function renderCalendar() {
             const year = currentDate.year();
-            const month = currentDate.month();
-            const firstDay = moment([year, month, 1]);
+            const month = currentDate.month() + 1; 
+
+            // Cargar citas de este mes si no las tenemos
+            const monthKey = \`\${year}-\${month.toString().padStart(2, '0')}\`;
+            if (!loadedMonths.has(monthKey)) {
+                await fetchMonthAppointments(month, year);
+                loadedMonths.add(monthKey);
+            }
+
+            const firstDay = moment([year, month - 1, 1]);
             const lastDay = moment(firstDay).endOf('month');
             const startDate = moment(firstDay).startOf('week');
             const endDate = moment(lastDay).endOf('week');
-            
-            document.getElementById('current-month').textContent = currentDate.format('MMMM YYYY');
-            
+
+            const monthTitle = document.getElementById('current-month');
+            if(monthTitle) monthTitle.textContent = currentDate.format('MMMM YYYY');
+
             const grid = document.getElementById('calendar-grid');
+            if(!grid) return;
             grid.innerHTML = '';
-            
+
             const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
             weekDays.forEach(day => {
                 const dayHeader = document.createElement('div');
@@ -933,85 +1194,121 @@ router.get('/:identifier', async (req, res) => {
                 dayHeader.textContent = day;
                 grid.appendChild(dayHeader);
             });
-            
+
             let day = startDate.clone();
             while (day.isSameOrBefore(endDate)) {
                 const dayStr = day.format('YYYY-MM-DD');
-                const isCurrentMonth = day.month() === month;
+                const isCurrentMonth = day.month() === month - 1; // moment months 0-11
                 const isToday = day.isSame(moment(), 'day');
-                const dayAppointments = appointments.filter(apt => 
-                    moment(apt.dateTime).format('YYYY-MM-DD') === dayStr
-                );
                 
+                // Filtrar citas del día
+                const dayAppointments = (calendarData[dayStr] || []);
+
                 const dayCell = document.createElement('div');
                 let classes = 'relative p-3 rounded-lg cursor-pointer transition-all duration-200 ';
                 classes += isCurrentMonth ? 'bg-gray-800 hover:bg-gray-700 ' : 'bg-gray-900/50 opacity-50 ';
                 classes += isToday ? 'ring-2 ring-blue-500 ' : '';
                 classes += dayAppointments.length > 0 ? 'border-l-4 border-green-500' : '';
                 dayCell.className = classes;
-                
+
                 const dayNum = document.createElement('div');
                 dayNum.className = 'text-white font-semibold mb-1';
                 dayNum.textContent = day.date();
                 dayCell.appendChild(dayNum);
-                
+
                 if (dayAppointments.length > 0) {
                     const aptsContainer = document.createElement('div');
                     aptsContainer.className = 'space-y-1';
-                    
+
                     dayAppointments.slice(0, 3).forEach(apt => {
                         const aptDiv = document.createElement('div');
                         aptDiv.className = 'text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded truncate';
                         aptDiv.textContent = moment(apt.dateTime).format('HH:mm') + ' - ' + (apt.clientName || 'Cliente');
                         aptsContainer.appendChild(aptDiv);
                     });
-                    
+
                     if (dayAppointments.length > 3) {
                         const moreDiv = document.createElement('div');
                         moreDiv.className = 'text-xs text-gray-400 text-center';
                         moreDiv.textContent = '+' + (dayAppointments.length - 3) + ' más';
                         aptsContainer.appendChild(moreDiv);
                     }
-                    
+
                     dayCell.appendChild(aptsContainer);
                 }
-                
+
                 dayCell.onclick = () => showDayDetails(dayStr, dayAppointments);
                 grid.appendChild(dayCell);
-                
+
                 day.add(1, 'day');
             }
         }
-        
+
         function prevMonth() {
             currentDate.subtract(1, 'month');
             renderCalendar();
         }
-        
+
         function nextMonth() {
             currentDate.add(1, 'month');
             renderCalendar();
         }
-        
+
         function goToToday() {
             currentDate = moment();
             renderCalendar();
         }
-        
+        function changeCalendarView(view) {
+            currentView = view;
+            renderCalendar();
+        }
+
+        function filterAppointments(filter) {
+            console.log('Filtrando citas por:', filter);
+            // Implementar lógica de filtrado
+            showToast('Filtro aplicado (demo)', 'info');
+        }
+
+        async function fetchMonthAppointments(month, year) {
+            if(!businessSlug) return;
+            try {
+                // Corrección de sintaxis de template string aquí
+                const response = await fetch(\`/api/business/\${businessSlug}/appointments?month=\${month}&year=\${year}\`);
+                if (!response.ok) throw new Error('Error fetching appointments');
+                const data = await response.json();
+
+                // Actualizar calendarData con las nuevas citas
+                data.forEach(apt => {
+                    const date = moment(apt.dateTime).format('YYYY-MM-DD');
+                    if (!calendarData[date]) calendarData[date] = [];
+                    // Evitar duplicados
+                    const exists = calendarData[date].some(a => a._id === apt._id);
+                    if (!exists) {
+                        calendarData[date].push(apt);
+                        // También actualizar lista global de appointments si no existe
+                        if(!appointments.some(a => a._id === apt._id)) {
+                             appointments.push(apt);
+                        }
+                    }
+                });
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching appointments:', error);
+                showToast('Error al cargar citas del mes', 'error');
+                return [];
+            }
+        }
+
         function showDayDetails(dayStr, dayAppointments) {
-            if (dayAppointments.length === 0) {
+            if (!dayAppointments || dayAppointments.length === 0) {
                 showToast('No hay citas programadas para este día', 'info');
                 return;
             }
-            alert('Citas del día: ' + moment(dayStr).format('DD MMMM YYYY') + '\\n\\n' + 
-                  dayAppointments.map(apt => apt.clientName + ' - ' + moment(apt.dateTime).format('HH:mm')).join('\\n'));
+            alert('Citas del día: ' + moment(dayStr).format('DD MMMM YYYY') + '\\n\\n' +
+                  dayAppointments.map(apt => (apt.clientName || 'Cliente') + ' - ' + moment(apt.dateTime).format('HH:mm')).join('\\n'));
         }
-            
-            // Escuchar cambios en checkboxes
-            document.getElementById('service-commission').addEventListener('change', function() {
-                document.getElementById('commission-field').classList.toggle('hidden', !this.checked);
-            });
-        });
+
 
         // =============================================
         // FUNCIONES DE SERVICIOS
@@ -1024,7 +1321,7 @@ router.get('/:identifier', async (req, res) => {
             const paymentText = service.requiresPayment ? '💳 Pago Online' : '🏥 Pago Consultorio';
             const isActive = service.active ? 'badge-active' : 'badge-inactive';
             const statusText = service.active ? 'Activo' : 'Inactivo';
-            
+
             return \`
                 <div class="service-card glass-card rounded-xl p-5 hover:shadow-lg transition-all duration-300" data-service-id="\${service._id}">
                     <div class="flex items-start mb-4">
@@ -1083,40 +1380,52 @@ router.get('/:identifier', async (req, res) => {
 
         function renderServicesGrid() {
             const container = document.getElementById('services-grid');
+            const noServicesState = document.getElementById('no-services-state');
             if (!container) return;
+
+            if (filteredServices.length === 0) {
+                 container.innerHTML = '';
+                 if(businessServices.length === 0 && noServicesState) {
+                    noServicesState.classList.remove('hidden');
+                 }
+                 return;
+            }
             
+            if(noServicesState) noServicesState.classList.add('hidden');
             container.innerHTML = filteredServices.map(service => renderServiceCard(service)).join('');
-            
+
             // Actualizar estadísticas
             document.getElementById('total-services').textContent = businessServices.length;
             document.getElementById('active-services').textContent = businessServices.filter(s => s.active).length;
             document.getElementById('online-payment').textContent = businessServices.filter(s => s.requiresPayment).length;
-            
-            const avgPrice = businessServices.length > 0 
+
+            const avgPrice = businessServices.length > 0
                 ? Math.round(businessServices.reduce((a,b) => a + (b.price || 0), 0) / businessServices.length)
                 : 0;
-            document.getElementById('avg-price').textContent = '\$' + avgPrice;
+            document.getElementById('avg-price').textContent = '$' + avgPrice;
+            
+            initChart(); // Actualizar gráfico
         }
 
         function filterServices() {
             const searchTerm = document.getElementById('service-search').value.toLowerCase();
             const categoryFilter = document.getElementById('category-filter').value;
             const statusFilter = document.getElementById('status-filter').value;
-            
+
             filteredServices = businessServices.filter(service => {
-                const matchesSearch = !searchTerm || 
+                const matchesSearch = !searchTerm ||
                     service.name.toLowerCase().includes(searchTerm) ||
                     (service.description && service.description.toLowerCase().includes(searchTerm)) ||
                     (service.category && service.category.toLowerCase().includes(searchTerm));
-                
+
                 const matchesCategory = !categoryFilter || service.category === categoryFilter;
-                const matchesStatus = !statusFilter || 
+                const matchesStatus = !statusFilter ||
                     (statusFilter === 'active' && service.active) ||
                     (statusFilter === 'inactive' && !service.active);
-                
+
                 return matchesSearch && matchesCategory && matchesStatus;
             });
-            
+
             renderServicesGrid();
         }
 
@@ -1125,7 +1434,7 @@ router.get('/:identifier', async (req, res) => {
             document.getElementById('modal-title').textContent = 'Nuevo Servicio';
             document.getElementById('modal-subtitle').textContent = 'Configura los detalles del servicio';
             document.getElementById('modal-submit-text').textContent = 'Guardar Servicio';
-            
+
             // Reset form
             document.getElementById('service-form').reset();
             document.getElementById('service-id').value = '';
@@ -1136,19 +1445,19 @@ router.get('/:identifier', async (req, res) => {
             document.getElementById('service-active').checked = true;
             document.getElementById('service-commission').checked = false;
             document.getElementById('commission-field').classList.add('hidden');
-            
+
             document.getElementById('service-modal-overlay').classList.add('active');
         }
 
         function editService(serviceId) {
             const service = businessServices.find(s => s._id === serviceId);
             if (!service) return;
-            
+
             editingServiceId = serviceId;
             document.getElementById('modal-title').textContent = 'Editar Servicio';
             document.getElementById('modal-subtitle').textContent = 'Modifica los detalles del servicio';
             document.getElementById('modal-submit-text').textContent = 'Actualizar Servicio';
-            
+
             // Fill form
             document.getElementById('service-id').value = service._id;
             document.getElementById('service-name').value = service.name;
@@ -1160,17 +1469,17 @@ router.get('/:identifier', async (req, res) => {
             document.getElementById('service-active').checked = service.active !== false;
             document.getElementById('service-commission').checked = !!service.commission;
             document.getElementById('service-commission-value').value = service.commission || 10;
-            
+
             if (service.commission) {
                 document.getElementById('commission-field').classList.remove('hidden');
             }
-            
+
             document.getElementById('service-modal-overlay').classList.add('active');
         }
 
         async function handleServiceSubmit(event) {
             event.preventDefault();
-            
+
             const formData = {
                 name: document.getElementById('service-name').value,
                 description: document.getElementById('service-description').value,
@@ -1182,21 +1491,21 @@ router.get('/:identifier', async (req, res) => {
                 customService: true,
                 basePrice: parseInt(document.getElementById('service-price').value)
             };
-            
+
             const hasCommission = document.getElementById('service-commission').checked;
             if (hasCommission) {
                 formData.commission = parseInt(document.getElementById('service-commission-value').value);
             }
-            
+
             try {
                 let url = \`/api/business/\${businessSlug}/services\`;
                 let method = 'POST';
-                
+
                 if (editingServiceId) {
                     url += \`/\${editingServiceId}\`;
                     method = 'PUT';
                 }
-                
+
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -1204,31 +1513,31 @@ router.get('/:identifier', async (req, res) => {
                     },
                     body: JSON.stringify(formData)
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Error en la respuesta del servidor');
                 }
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     closeServiceModal();
-                    
+
                     // Recargar servicios
                     const businessResponse = await fetch(\`/api/business/\${businessSlug}\`);
                     const updatedBusiness = await businessResponse.json();
                     businessServices = updatedBusiness.services || [];
                     filteredServices = [...businessServices];
-                    
+
                     renderServicesGrid();
                     updateStats();
                     initChart();
-                    
+
                     showToast('¡Servicio guardado exitosamente!', 'success');
                 } else {
                     throw new Error(result.error || 'Error al guardar');
                 }
-                
+
             } catch (error) {
                 console.error('Error al guardar servicio:', error);
                 showToast('Error al guardar el servicio', 'error');
@@ -1243,29 +1552,29 @@ router.get('/:identifier', async (req, res) => {
             if (!confirm('¿Estás seguro de eliminar este servicio? Esta acción no se puede deshacer.')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(\`/api/business/\${businessSlug}/services/\${serviceId}\`, {
                     method: 'DELETE'
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Error al eliminar servicio');
                 }
-                
+
                 const result = await response.json();
                 if (result.success) {
                     // Actualizar lista local
                     businessServices = businessServices.filter(s => s._id !== serviceId);
                     filteredServices = filteredServices.filter(s => s._id !== serviceId);
-                    
+
                     renderServicesGrid();
                     updateStats();
                     initChart();
-                    
+
                     showToast('Servicio eliminado exitosamente', 'success');
                 }
-                
+
             } catch (error) {
                 console.error('Error eliminando servicio:', error);
                 showToast('Error al eliminar el servicio', 'error');
@@ -1275,9 +1584,9 @@ router.get('/:identifier', async (req, res) => {
         function exportServices() {
             const dataStr = JSON.stringify(businessServices, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
+
             const exportFileDefaultName = \`servicios-\${businessSlug}-\${moment().format('YYYY-MM-DD')}.json\`;
-            
+
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
@@ -1320,20 +1629,20 @@ router.get('/:identifier', async (req, res) => {
             // Crear toast
             const toast = document.createElement('div');
             toast.className = \`fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium shadow-lg z-50 transform translate-x-full transition-transform duration-300 \${
-                type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
                 'bg-blue-500'
             }\`;
             toast.textContent = message;
             toast.id = 'toast-' + Date.now();
-            
+
             document.body.appendChild(toast);
-            
+
             // Mostrar
             setTimeout(() => {
                 toast.classList.remove('translate-x-full');
             }, 10);
-            
+
             // Ocultar después de 3 segundos
             setTimeout(() => {
                 toast.classList.add('translate-x-full');
@@ -1353,12 +1662,15 @@ router.get('/:identifier', async (req, res) => {
                 moment(apt.dateTime).format('YYYY-MM-DD') === today
             );
             const confirmedAppointments = appointments.filter(apt => apt.status === 'confirmed');
-            const confirmationRate = appointments.length > 0 
+            const confirmationRate = appointments.length > 0
                 ? Math.round((confirmedAppointments.length / appointments.length) * 100)
                 : 0;
 
-            document.getElementById('today-count').textContent = todayAppointments.length;
-            document.getElementById('confirmation-rate').textContent = confirmationRate + '%';
+            const todayEl = document.getElementById('today-count');
+            if(todayEl) todayEl.textContent = todayAppointments.length;
+            
+            const rateEl = document.getElementById('confirmation-rate');
+            if(rateEl) rateEl.textContent = confirmationRate + '%';
         }
 
         function initTabs() {
@@ -1393,8 +1705,8 @@ router.get('/:identifier', async (req, res) => {
                 activeTab.classList.remove('hidden');
                 activeTab.classList.add('active');
 
-                // Cargar servicios si es la pestaña de servicios
-                if (tabName === 'services') {
+                // Cargar servicios si es la pestaña de servicios y está vacía
+                if (tabName === 'services' && filteredServices.length === 0) {
                     renderServicesGrid();
                 }
             }
@@ -1403,13 +1715,17 @@ router.get('/:identifier', async (req, res) => {
         function initChart() {
             const ctx = document.getElementById('servicesChart');
             if (!ctx) return;
-            
+
+            // Destruir gráfico previo si existe para evitar superposiciones
+            const existingChart = Chart.getChart(ctx);
+            if(existingChart) existingChart.destroy();
+
             const categories = {};
             businessServices.forEach(service => {
                 const category = service.category || 'general';
                 categories[category] = (categories[category] || 0) + 1;
             });
-            
+
             new Chart(ctx.getContext('2d'), {
                 type: 'doughnut',
                 data: {
@@ -1440,7 +1756,7 @@ router.get('/:identifier', async (req, res) => {
                                     const label = context.label || '';
                                     const value = context.raw || 0;
                                     const total = businessServices.length;
-                                    const percentage = Math.round((value / total) * 100);
+                                    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
                                     return \`\${label}: \${value} servicios (\${percentage}%)\`;
                                 }
                             }
@@ -1453,13 +1769,14 @@ router.get('/:identifier', async (req, res) => {
         function initMiniCalendar() {
             const container = document.getElementById('mini-calendar-container');
             if (!container) return;
-            
+            container.innerHTML = ''; // Limpiar
+
             const today = moment();
             const currentMonth = today.format('MMMM YYYY');
             const startOfMonth = today.clone().startOf('month');
             const startDay = startOfMonth.day();
             const daysInMonth = today.daysInMonth();
-            
+
             // Días de la semana
             ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
                 const dayElement = document.createElement('div');
@@ -1467,14 +1784,14 @@ router.get('/:identifier', async (req, res) => {
                 dayElement.textContent = day;
                 container.appendChild(dayElement);
             });
-            
+
             // Días vacíos al inicio
             for (let i = 0; i < startDay; i++) {
                 const emptyDay = document.createElement('div');
                 emptyDay.className = 'text-center p-2';
                 container.appendChild(emptyDay);
             }
-            
+
             // Días del mes
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayElement = document.createElement('div');
@@ -1482,33 +1799,27 @@ router.get('/:identifier', async (req, res) => {
                 const dateStr = date.format('YYYY-MM-DD');
                 const dayAppointments = calendarData[dateStr] || [];
                 const isToday = dateStr === moment().format('YYYY-MM-DD');
-                
+
                 dayElement.className = \`text-center p-2 rounded-lg text-sm font-medium cursor-pointer transition-all \${
-                    dayAppointments.length > 0 
-                        ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                    dayAppointments.length > 0
+                        ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                         : 'bg-gray-100 hover:bg-gray-200'
                 } \${
                     isToday ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
                 }\`;
-                
+
                 dayElement.textContent = day;
-                dayElement.title = dayAppointments.length > 0 
-                    ? \`\${dayAppointments.length} citas\` 
+                dayElement.title = dayAppointments.length > 0
+                    ? \`\${dayAppointments.length} citas\`
                     : 'Sin citas';
-                
+
                 dayElement.onclick = () => {
                     selectedDate = dateStr;
                     switchTab('calendar');
                 };
-                
+
                 container.appendChild(dayElement);
             }
-        }
-
-        function changeView(view) {
-            currentView = view;
-            // En una implementación completa, esto cambiaría la vista del calendario principal
-            showToast('Vista cambiada a ' + view, 'info');
         }
     </script>
 </body>
@@ -1517,198 +1828,6 @@ router.get('/:identifier', async (req, res) => {
   } catch (error) {
     console.error('Error en dashboard pro:', error);
     res.status(500).send('Error cargando dashboard profesional');
-  }
-});
-
-// POST - Agregar nuevo servicio
-router.post("/:identifier/services", async (req, res) => {
-  try {
-    const { identifier } = req.params;
-    const { 
-      name, 
-      description = "", 
-      duration = 30, 
-      price = 1000, 
-      active = true, 
-      category = "general", 
-      requiresPayment = false,
-      commission = 0,
-      customService = true,
-      basePrice
-    } = req.body;
-
-    let business;
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
-      business = await Business.findById(identifier);
-    } else {
-      business = await Business.findOne({ slug: identifier });
-    }
-
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
-
-    const newService = {
-      name,
-      description,
-      duration: parseInt(duration),
-      price: parseInt(price),
-      active,
-      category,
-      requiresPayment,
-      customService,
-      basePrice: parseInt(basePrice || price),
-      commission: parseInt(commission || 0),
-      timesBooked: 0,
-      revenue: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    business.services.push(newService);
-    await business.save();
-    
-    res.json({ 
-      success: true, 
-      service: newService,
-      services: business.services 
-    });
-  } catch (error) {
-    console.error("Error al crear servicio:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-});
-
-// PUT - Actualizar servicio
-router.put("/:identifier/services/:serviceId", async (req, res) => {
-  try {
-    let business;
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      business = await Business.findById(req.params.identifier);
-    } else {
-      business = await Business.findOne({ slug: req.params.identifier });
-    }
-
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
-
-    const service = business.services.id(req.params.serviceId);
-    if (!service) {
-      return res.status(404).json({ error: "Servicio no encontrado" });
-    }
-
-    const { 
-      name, 
-      description, 
-      duration, 
-      price, 
-      active, 
-      category, 
-      requiresPayment,
-      commission,
-      basePrice
-    } = req.body;
-
-    if (name !== undefined) service.name = name;
-    if (category !== undefined) service.category = category;
-    if (requiresPayment !== undefined) service.requiresPayment = requiresPayment;
-    if (description !== undefined) service.description = description;
-    if (duration !== undefined) service.duration = parseInt(duration);
-    if (price !== undefined) service.price = parseInt(price);
-    if (active !== undefined) service.active = active;
-    if (commission !== undefined) service.commission = parseInt(commission || 0);
-    if (basePrice !== undefined) service.basePrice = parseInt(basePrice);
-
-    service.updatedAt = new Date();
-    await business.save();
-
-    res.json({ 
-      success: true, 
-      service: service.toObject(),
-      services: business.services 
-    });
-  } catch (error) {
-    console.error("Error al actualizar servicio:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// DELETE - Eliminar servicio
-router.delete("/:identifier/services/:serviceId", async (req, res) => {
-  try {
-    let business;
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      business = await Business.findById(req.params.identifier);
-    } else {
-      business = await Business.findOne({ slug: req.params.identifier });
-    }
-
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
-
-    const service = business.services.id(req.params.serviceId);
-    if (!service) {
-      return res.status(404).json({ error: "Servicio no encontrado" });
-    }
-
-    service.remove();
-    await business.save();
-
-    res.json({ 
-      success: true, 
-      message: "Servicio eliminado",
-      services: business.services 
-    });
-  } catch (error) {
-    console.error("Error al eliminar servicio:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET - Obtener servicios del negocio (para el dashboard)
-router.get("/api/business/:identifier/services", async (req, res) => {
-  try {
-    let business;
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      business = await Business.findById(req.params.identifier);
-    } else {
-      business = await Business.findOne({ slug: req.params.identifier });
-    }
-
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
-
-    res.json(business.services || []);
-  } catch (error) {
-    console.error("Error al obtener servicios:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-});
-
-// GET - Obtener información completa del negocio
-router.get("/api/business/:identifier", async (req, res) => {
-  try {
-    let business;
-    if (req.params.identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      business = await Business.findById(req.params.identifier);
-    } else {
-      business = await Business.findOne({ slug: req.params.identifier });
-    }
-
-    if (!business) {
-      return res.status(404).json({ error: "Negocio no encontrado" });
-    }
-
-    res.json({
-      ...business.toObject(),
-      services: business.services || []
-    });
-  } catch (error) {
-    console.error("Error al obtener negocio:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 
