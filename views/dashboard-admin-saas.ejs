@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechBot Admin | Dashboard SaaS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            background: #111827;
+            padding: 2rem;
+            position: fixed;
+            border-right: 1px solid #334155;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 3rem;
+        }
+
+        .menu-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            transition: 0.2s;
+        }
+
+        .menu-item:hover,
+        .menu-item.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .kpi-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .kpi-trend {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .trend-up {
+            color: var(--success);
+        }
+
+        /* Table */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-trial {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        .status-suspended {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .plan-tag {
+            background: #334155;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="logo"><i class="fa-solid fa-robot"></i> TechBot Admin</div>
+        <nav>
+            <a href="#" class="menu-item active"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-users"></i> Clientes</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-money-bill-wave"></i> Finanzas</a>
+            <a href="#" class="menu-item"><i class="fa-solid fa-gear"></i> Configuración</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Visión General</h1>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">
+                Última actualización: <%= new Date().toLocaleTimeString() %>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">MRR ESTIMADO</div>
+                <div class="kpi-value">$<%= businesses.reduce((acc, b)=> acc + (b.plan === 'active' ? 49 : 0), 0) * 100
+                        %> M</div>
+                <div class="kpi-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12% mes actual</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">CLIENTES ACTIVOS</div>
+                <div class="kpi-value">
+                    <%= businesses.length %>
+                </div>
+                <div class="kpi-trend trend-up"><i class="fa-solid fa-user-plus"></i> +3 esta semana</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">SUB-CUENTAS TWILIO</div>
+                <div class="kpi-value">
+                    <%= businesses.filter(b=> b.twilioConfig?.status === 'active').length %>
+                </div>
+                <div class="kpi-trend"><span style="color: #fbbf24;">En proceso: <%= businesses.filter(b=>
+                            b.twilioConfig?.status === 'pending').length %></span></div>
+            </div>
+        </div>
+
+        <!-- Clients Table -->
+        <div class="table-container">
+            <div class="table-header">Clientes Recientes</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Negocio</th>
+                        <th>Plan</th>
+                        <th>Estado</th>
+                        <th>Teléfono Asignado</th>
+                        <th>Trial Vence</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% businesses.forEach(business=> { %>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">
+                                    <%= business.businessName %>
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    <%= business.contactEmail %>
+                                </div>
+                            </td>
+                            <td><span class="plan-tag">
+                                    <%= business.plan.toUpperCase() %>
+                                </span></td>
+                            <td>
+                                <span class="status-badge status-<%= business.subscriptionStatus %>">
+                                    <%= business.subscriptionStatus %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (business.twilioConfig?.phoneNumber) { %>
+                                    <%= business.twilioConfig.phoneNumber %>
+                                        <% } else { %>
+                                            <span style="color: #666;">Pendiente</span>
+                                            <% } %>
+                            </td>
+                            <td>
+                                <% if (business.trialEndsAt) { %>
+                                    <%= new Date(business.trialEndsAt).toLocaleDateString() %>
+                                        <% } else { %>
+                                            N/A
+                                            <% } %>
+                            </td>
+                            <td>
+                                <a href="/dashboard/<%= business._id %>" target="_blank" class="btn-sm">Ver Dash</a>
+                            </td>
+                        </tr>
+                        <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+
+</html>
