@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechBot - Tu Negocio en Autopiloto | SaaS de Automatización</title>
+    <meta name="description" content="Automatiza tu consultorio, clínica o negocio con TechBot. Agendamiento IA 24/7 y gestión de clientes vía WhatsApp.">
+    
+    <!-- Google Fonts: Outfit (Moderna y Tech) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #0a0a0f;
+            --card-bg: rgba(23, 23, 33, 0.8);
+            --primary: #6366f1;
+            --primary-glow: #6366f180;
+            --accent: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-light: rgba(255, 255, 255, 0.1);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15) 0%, transparent 25%);
+        }
+
+        /* --- Header / Nav --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 15, 0.7);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo i { color: var(--primary); -webkit-text-fill-color: initial; }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .nav-links a:hover { color: var(--text-main); }
+
+        .btn-cta {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--primary-glow);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            padding-top: 80px;
+            position: relative;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        .badge-new {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1.5px;
+        }
+        h1 span {
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+            max-width: 480px;
+        }
+
+        .hero-visual {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Phone Mockup Animation */
+        .phone-mockup {
+            width: 300px;
+            height: 600px;
+            background: #000;
+            border-radius: 40px;
+            border: 8px solid #333;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .chat-screen {
+            background: #0b141a;
+            height: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-top: 40px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .chat-bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            border-radius: 12px;
+            position: relative;
+            opacity: 0;
+            animation: popIn 0.5s forwards;
+        }
+        
+        .bubble-bot {
+            background: #1f2c34;
+            color: #fff;
+            align-self: flex-start;
+            border-top-left-radius: 0;
+        }
+        
+        .bubble-user {
+            background: #005c4b;
+            color: #fff;
+            align-self: flex-end;
+            border-top-right-radius: 0;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* --- Features Grid --- */
+        .features {
+            padding: 5rem 5%;
+            background: #0d0d12;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+        .section-header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            transition: 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.2);
+        }
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .feature-card h3 { margin-bottom: 1rem; font-size: 1.3rem; }
+        .feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* --- Pricing --- */
+        .pricing {
+            padding: 5rem 5%;
+            position: relative;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .plan-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            padding: 3rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .plan-card.highlight {
+            border-color: var(--primary);
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, var(--card-bg) 50%);
+        }
+        
+        .popular-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .price { font-size: 3rem; font-weight: 800; margin: 1.5rem 0 0.5rem; }
+        .price span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+        
+        .plan-features {
+            list-style: none;
+            margin: 2rem 0;
+            flex-grow: 1;
+        }
+        .plan-features li {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .plan-features li i { color: var(--primary); }
+
+        .btn-outline {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
+
+        .btn-primary-block {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-primary-block:hover { background: #5558e6; }
+
+        /* --- Footer --- */
+        footer {
+            padding: 4rem 5% 2rem;
+            background: #050508;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* --- Modal Signup --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+            align-items: center; justify-content: center;
+        }
+        
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: #171721;
+            padding: 2.5rem;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid var(--border-light);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none; border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group { margin-bottom: 1.2rem; text-align: left; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            color: #fff;
+            font-family: inherit;
+        }
+        
+        .trial-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34d399;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 120px; }
+            .hero-content { margin-bottom: 3rem; }
+            h1 { font-size: 3rem; }
+            .chat-screen { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav>
+        <div class="logo"><i class="fa-solid fa-robot"></i> TechBot</div>
+        <div class="nav-links">
+            <a href="#features">Características</a>
+            <a href="#pricing">Precios</a>
+        </div>
+        <button class="btn-cta" onclick="openSignup('pro')">Prueba Gratis</button>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="badge-new"><i class="fa-solid fa-bolt"></i> Nuevo motor IA 2.0</div>
+            <h1>Tu Negocio en <br><span>Autopiloto Total</span></h1>
+            <p class="hero-desc">Deja que nuestro Bot inteligente gestione citas, responda clientes y cierre ventas por WhatsApp. Configúralo en minutos.</p>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn-cta" onclick="openSignup('pro')" style="padding: 1rem 2rem;">Comenzar Ahora</button>
+                <button class="btn-outline" style="width: auto; padding: 1rem 2rem;">Ver Demo</button>
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;">
+                <i class="fa-solid fa-check" style="color: var(--primary);"></i> 3 días de prueba PRO incluidos
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="phone-mockup">
+                <div class="chat-screen" id="chatDemo">
+                    <!-- JS will animate this -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="features">
+        <div class="section-header">
+            <h2>Todo lo que necesitas</h2>
+            <p>Más que un chatbot, una plataforma completa de gestión para profesionales.</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-brands fa-whatsapp"></i></div>
+                <h3>WhatsApp Automatizado</h3>
+                <p>Respuestas inmediatas 24/7. Tu negocio nunca duerme, tu bot tampoco.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-solid fa-calendar-check"></i></div>
+                <h3>Agendamiento Inteligente</h3>
+                <p>Sincronización con Google Calendar. Evita citas duplicadas automáticamente.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
+                <h3>Dashboard Financiero</h3>
+                <p>Visualiza tus ingresos, citas completadas y proyecciones futuras en tiempo real.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" class="pricing">
+        <div class="section-header">
+            <h2>Planes Flexibles</h2>
+            <p>Comienza con nuestra prueba de 3 días. Cancela cuando quieras.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Basic -->
+            <div class="plan-card">
+                <h3>Básico</h3>
+                <div class="price">$29<span>/mes</span></div>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Para emprendedores que inician.</p>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> Respuestas Automáticas</li>
+                    <li><i class="fa-solid fa-check"></i> Agendamiento simple</li>
+                    <li><i class="fa-solid fa-times" style="color: #444;"></i> Dashboard Avanzado</li>
+                    <li><i class="fa-solid fa-times" style="color: #444;"></i> Número Dedicado</li>
+                </ul>
+                <button class="btn-outline" onclick="openSignup('basic')">Elegir Básico</button>
+            </div>
+
+            <!-- Pro -->
+            <div class="plan-card highlight">
+                <div class="popular-tag">Más Popular</div>
+                <h3>Pro</h3>
+                <div class="price">$49<span>/mes</span></div>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Automatización total y control.</p>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> <strong>Número Propio Dedicado</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Dashboard Financiero</li>
+                    <li><i class="fa-solid fa-check"></i> Calendar Sync Bidireccional</li>
+                    <li><i class="fa-solid fa-check"></i> Recordatorios Automáticos</li>
+                </ul>
+                <button class="btn-primary-block" onclick="openSignup('pro')">Prueba 3 Días Gratis</button>
+            </div>
+
+            <!-- Ultra -->
+            <div class="plan-card">
+                <h3>Ultra IA</h3>
+                <div class="price">$99<span>/mes</span></div>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Poder de Marketing e IA.</p>
+                <ul class="plan-features">
+                    <li><i class="fa-solid fa-check"></i> Todo lo de Pro</li>
+                    <li><i class="fa-solid fa-check"></i> <strong>IA Conversacional Avanzada</strong></li>
+                    <li><i class="fa-solid fa-check"></i> Campañas de Reactivación</li>
+                    <li><i class="fa-solid fa-check"></i> Soporte Prioritario 24/7</li>
+                </ul>
+                <button class="btn-outline" onclick="openSignup('ultra')">Contactar Ventas</button>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 TechBot SaaS. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeSignup()">&times;</button>
+            <h2 style="margin-bottom: 1rem;">Crea tu cuenta</h2>
+            
+            <div class="trial-badge">
+                <i class="fa-solid fa-gift"></i> Incluye 3 días PRO gratis
+            </div>
+
+            <form action="/signup" method="POST">
+                <input type="hidden" id="selectedPlan" name="plan" value="pro">
+                
+                <div class="form-group">
+                    <label>Nombre del Negocio</label>
+                    <input type="text" name="businessName" placeholder="Ej. Clínica Dental Sonrisas" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de Negocio</label>
+                    <select name="businessType" required>
+                        <option value="dental">Consultorio Dental</option>
+                        <option value="medical">Clínica Médica</option>
+                        <option value="spa">Spa / Estética</option>
+                        <option value="barbershop">Barbería</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>WhatsApp (Donde te contactarán)</label>
+                    <input type="tel" name="whatsapp" placeholder="+52 1 55..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" placeholder="tu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" name="password" placeholder="********" required>
+                </div>
+
+                <button type="submit" class="btn-cta" style="width: 100%; border-radius: 12px; margin-top: 1rem;">Crear mi Bot</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Chat Animation
+        const messages = [
+            { text: "Hola, quisiera agendar una cita", type: "user", delay: 1000 },
+            { text: "¡Hola! Claro que sí 👋 Soy el asistente virtual de TechBot. ¿Para qué día te gustaría?", type: "bot", delay: 2500 },
+            { text: "Para este jueves por la tarde", type: "user", delay: 4500 },
+            { text: "Perfecto. Tengo disponible a las 4:00 PM y 5:30 PM. ¿Cuál prefieres?", type: "bot", delay: 6000 }
+        ];
+
+        const chatContainer = document.getElementById('chatDemo');
+
+        function playChat() {
+            chatContainer.innerHTML = '';
+            let currentTime = 0;
+
+            messages.forEach(msg => {
+                currentTime += msg.delay;
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = `chat-bubble bubble-${msg.type}`;
+                    div.innerText = msg.text;
+                    chatContainer.appendChild(div);
+                }, currentTime); // Use running total
+            });
+        }
+        
+        // Loop animation
+        playChat();
+        setInterval(playChat, 12000); // Reset every 12s
+
+        // Modal Logic
+        function openSignup(plan) {
+            document.getElementById('selectedPlan').value = plan;
+            document.getElementById('signupModal').classList.add('active');
+        }
+        function closeSignup() {
+            document.getElementById('signupModal').classList.remove('active');
+        }
+        
+        // Close on blur
+        document.getElementById('signupModal').addEventListener('click', (e) => {
+            if(e.target === document.getElementById('signupModal')) closeSignup();
+        });
+    </script>
+</body>
+</html>

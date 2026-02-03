@@ -3,7 +3,12 @@ const serviceCatalogs = require('../config/service-catalogs');
 
 const businessSchema = new mongoose.Schema({
   // DATOS BÁSICOS DEL NEGOCIO
+  // 🎯 SAAS CLIENT DATA
+  adminEmail: { type: String, unique: false }, // Email del dueño (login)
+  passwordHash: String, // Password para dashboard
+
   businessType: {
+
     type: String,
     enum: ['medical', 'dental', 'spa', 'nails', 'barbershop', 'automotive', 'food', 'other'],
     required: true
@@ -27,6 +32,14 @@ const businessSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // 🎯 TWILIO MULTI-TENANT CONFIG
+  twilioConfig: {
+    accountSid: String,      // Subaccount SID
+    authToken: String,       // Subaccount Auth Token
+    phoneNumberSid: String,  // SID del número comprado
+    phoneNumber: String,     // El número asignado (e.g. +52...)
+    status: { type: String, enum: ['pending', 'active', 'suspended'], default: 'pending' }
+  },
   contactEmail: {
     type: String,
     required: true
@@ -45,16 +58,16 @@ const businessSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: String,
     duration: { type: Number, default: 30 }, // minutos
-    
+
     // Precios
     price: { type: Number, default: 0 },         // Precio actual (editable por negocio)
     basePrice: { type: Number, default: 0 },     // Precio sugerido del catálogo (solo lectura)
-    
+
     // Estado y categoría
     active: { type: Boolean, default: true },
     category: String,
     customService: { type: Boolean, default: false }, // true = agregado manualmente
-    
+
     // Sistema de pagos (para Premium)
     requiresPayment: { type: Boolean, default: false }, // true = pago online
     paymentLink: String,    // Link de pago (Stripe, MercadoPago, etc.)
@@ -64,11 +77,11 @@ const businessSchema = new mongoose.Schema({
       min: 0,
       max: 100
     },
-    
+
     // Analytics (para Premium)
     timesBooked: { type: Number, default: 0 },  // Veces agendado
     revenue: { type: Number, default: 0 },      // Ingresos generados
-    
+
     // Metadata
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
@@ -88,9 +101,16 @@ const businessSchema = new mongoose.Schema({
   // PLAN Y ESTADO
   plan: {
     type: String,
-    enum: ['demo', 'basic', 'pro', 'premium'],
+    enum: ['demo', 'basic', 'pro', 'ultra'],
     default: 'demo'
   },
+  subscriptionStatus: {
+    type: String,
+    enum: ['trial', 'active', 'past_due', 'canceled'],
+    default: 'trial'
+  },
+  trialEndsAt: { type: Date }, // Fecha fin del trial
+
   status: {
     type: String,
     enum: ['active', 'inactive', 'suspended'],
@@ -112,7 +132,7 @@ const businessSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 // 🎯 MIDDLEWARE - Generar slug automáticamente
-businessSchema.pre("save", function(next) {
+businessSchema.pre("save", function (next) {
   if (this.isModified("businessName") || !this.slug) {
     this.slug = this.businessName
       .toLowerCase()
@@ -126,12 +146,12 @@ businessSchema.pre("save", function(next) {
 
 
 // 🎯 MIDDLEWARE MEJORADO - Carga servicios con basePrice
-businessSchema.pre('save', function(next) {
+businessSchema.pre('save', function (next) {
   // Solo para nuevos negocios o cuando se cambia businessType
   if (this.isNew || this.isModified('businessType')) {
     if (this.businessType && serviceCatalogs[this.businessType]) {
       const catalogServices = serviceCatalogs[this.businessType];
-      
+
       // Si no hay servicios, cargar del catálogo
       if (!this.services || this.services.length === 0) {
         this.services = catalogServices.map(service => ({
@@ -148,19 +168,19 @@ businessSchema.pre('save', function(next) {
       }
     }
   }
-  
+
   // Actualizar updatedAt en servicios modificados
   if (this.isModified('services')) {
     this.services.forEach(service => {
       service.updatedAt = new Date();
     });
   }
-  
+
   next();
 });
 
 // 🎯 MÉTODO PARA AGREGAR SERVICIO MANUALMENTE
-businessSchema.methods.addCustomService = function(serviceData) {
+businessSchema.methods.addCustomService = function (serviceData) {
   this.services.push({
     name: serviceData.name,
     description: serviceData.description || '',
@@ -175,7 +195,7 @@ businessSchema.methods.addCustomService = function(serviceData) {
 };
 
 // 🎯 MÉTODO PARA ACTUALIZAR ANALYTICS
-businessSchema.methods.updateServiceAnalytics = function(serviceId, amount) {
+businessSchema.methods.updateServiceAnalytics = function (serviceId, amount) {
   const service = this.services.id(serviceId);
   if (service) {
     service.timesBooked += 1;

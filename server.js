@@ -16,8 +16,8 @@ const globalLimiter = rateLimit({
   },
   skip: (req) => {
     // Saltar rate limit para webhooks de Twilio
-    return req.path.includes('/api/whatsapp') && 
-           req.headers['x-twilio-signature'] !== undefined;
+    return req.path.includes('/api/whatsapp') &&
+      req.headers['x-twilio-signature'] !== undefined;
   }
 });
 
@@ -28,18 +28,18 @@ app.use(cors());
 // Middleware para detectar subdominio
 app.use((req, res, next) => {
   const host = req.headers.host;
-  
+
   // Extraer subdominio si existe
   if (host.includes('.')) {
     const subdomain = host.split('.')[0];
-    
+
     // Solo procesar si no es 'www' o 'dental-bot-prod'
     if (!['www', 'dental-bot-prod', 'localhost'].includes(subdomain)) {
       req.subdomain = subdomain;
       console.log('🌐 Subdominio detectado:', subdomain);
     }
   }
-  
+
   next();
 });
 
@@ -104,7 +104,12 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Ruta principal
+// 🎯 SAAS ROUTING (LANDING PAGE & SIGNUP)
+const saasRoutes = require('./routes/saas');
+app.use('/', saasRoutes);
+
+// ⚠️ RUTA ANTIGUA DESACTIVADA (Reemplazada por Landing Page)
+/*
 app.get('/', (req, res) => {
   res.json({
     message: 'Dental Bot API',
@@ -118,6 +123,7 @@ app.get('/', (req, res) => {
     }
   });
 });
+*/
 
 // Ruta admin dashboard
 app.get('/admin', async (req, res) => {
