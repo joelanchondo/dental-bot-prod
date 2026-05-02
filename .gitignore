@@ -7,3 +7,5 @@ node_modules/
 *Credentials.js
 *Twilio*.js
 *fixBusiness.js
+node_modules/
+.env*

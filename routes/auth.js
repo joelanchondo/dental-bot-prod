@@ -217,10 +217,12 @@ router.post('/login', async (req, res) => {
 
         // Determinar redirección
         let redirectTo = '/dashboard';
-        if (user.businessId) {
+        if (user.role === 'superadmin') {
+            redirectTo = '/admin';
+        } else if (user.businessId) {
             redirectTo = `/dashboard-pro/${user.businessId.slug || user.businessId._id}`;
         } else if (!user.onboardingCompleted) {
-            redirectTo = '/crear-negocio';
+            redirectTo = '/auth/register'; // ← Redirige a la página de registro correcta
         }
 
         res.json({

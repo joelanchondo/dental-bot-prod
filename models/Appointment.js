@@ -6,6 +6,10 @@ const appointmentSchema = new mongoose.Schema({
     ref: 'Business',
     required: true
   },
+  locationId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Business.locations'
+  },
   clientName: {
     type: String,
     required: true
@@ -18,6 +22,19 @@ const appointmentSchema = new mongoose.Schema({
   service: {
     type: String,
     required: true
+  },
+  serviceName: String,
+  servicePrice: {
+    type: Number,
+    default: 0
+  },
+  serviceDuration: {
+    type: Number,
+    default: 30
+  },
+  totalAmount: {
+    type: Number,
+    default: 0
   },
   dateTime: {
     type: Date,
@@ -66,7 +83,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   reminders: {
     sent24h: { type: Boolean, default: false },
-    sent1h: { type: Boolean, default: false },
+    sent30m: { type: Boolean, default: false },
     emailSent: { type: Boolean, default: false }
   },
   history: [{

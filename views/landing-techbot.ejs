@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechBot - Tu Negocio en Autopiloto | SaaS de Automatización</title>
+    <title>TechBot - Automatización Inteligente 24/7</title>
     <meta name="description" content="Automatiza tu consultorio, clínica o negocio con TechBot. Agendamiento IA 24/7 y gestión de clientes vía WhatsApp.">
     
-    <!-- Google Fonts: Outfit (Moderna y Tech) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --bg-color: #0a0a0f;
-            --card-bg: rgba(23, 23, 33, 0.8);
-            --primary: #6366f1;
-            --primary-glow: #6366f180;
-            --accent: #ec4899;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-light: rgba(255, 255, 255, 0.1);
-            --glass: rgba(255, 255, 255, 0.05);
+            --bg-dark: #030712;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --primary: #f59e0b;     /* Amber 500 */
+            --primary-glow: rgba(245, 158, 11, 0.4);
+            --accent: #fbbf24;      /* Amber 400 */
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-light: rgba(255, 255, 255, 0.08);
         }
 
         * {
@@ -34,110 +33,156 @@
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-main);
             overflow-x: hidden;
             line-height: 1.6;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15) 0%, transparent 25%);
         }
 
-        /* --- Header / Nav --- */
+        /* --- Fondos Dinámicos --- */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(circle at 15% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(251, 191, 36, 0.05) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .grid-pattern {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- Navbar --- */
         nav {
             position: fixed;
-            top: 0;
-            width: 100%;
-            padding: 1.5rem 5%;
+            top: 0; width: 100%;
+            padding: 1.2rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(10px);
-            background: rgba(10, 10, 15, 0.7);
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(12px);
             z-index: 1000;
             border-bottom: 1px solid var(--border-light);
+            transition: all 0.3s ease;
         }
 
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #fff;
+            text-decoration: none;
         }
-        .logo i { color: var(--primary); -webkit-text-fill-color: initial; }
+
+        .logo span {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
         .nav-links {
             display: flex;
             gap: 2rem;
-            list-style: none;
+            align-items: center;
         }
+
         .nav-links a {
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
-            transition: 0.3s;
+            font-size: 0.95rem;
+            transition: color 0.3s;
         }
-        .nav-links a:hover { color: var(--text-main); }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        .btn-login {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .btn-login:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
 
         .btn-cta {
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
+            color: #000;
             padding: 0.6rem 1.5rem;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
-            font-size: 0.9rem;
-            box-shadow: 0 4px 15px var(--primary-glow);
-            transition: transform 0.2s, box-shadow 0.2s;
+            font-size: 0.95rem;
             border: none;
             cursor: pointer;
+            box-shadow: 0 4px 20px var(--primary-glow);
+            transition: all 0.3s ease;
         }
+
         .btn-cta:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--primary-glow);
+            box-shadow: 0 8px 30px var(--primary-glow);
         }
 
         /* --- Hero Section --- */
         .hero {
-            min-height: 90vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 5%;
-            padding-top: 80px;
+            padding-top: 100px;
             position: relative;
         }
 
         .hero-content {
             flex: 1;
-            max-width: 600px;
+            max-width: 650px;
             z-index: 2;
         }
 
-        .badge-new {
+        .badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 6px 16px;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
             border-radius: 20px;
             font-size: 0.85rem;
             color: var(--primary);
+            font-weight: 600;
             margin-bottom: 1.5rem;
+            backdrop-filter: blur(4px);
         }
 
         h1 {
-            font-size: 4rem;
+            font-size: 4.5rem;
             line-height: 1.1;
+            font-weight: 800;
             margin-bottom: 1.5rem;
             letter-spacing: -1.5px;
         }
+
         h1 span {
             background: linear-gradient(to right, var(--primary), var(--accent));
             -webkit-background-clip: text;
@@ -145,108 +190,165 @@
         }
 
         .hero-desc {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             color: var(--text-muted);
             margin-bottom: 2.5rem;
-            max-width: 480px;
+            max-width: 500px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-outline {
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .hero-visual {
             flex: 1;
             display: flex;
-            justify-content: center;
+            justify-content: flex-end;
             position: relative;
         }
 
-        /* Phone Mockup Animation */
+        /* --- iPhone Mockup --- */
         .phone-mockup {
-            width: 300px;
-            height: 600px;
+            width: 320px;
+            height: 650px;
             background: #000;
-            border-radius: 40px;
-            border: 8px solid #333;
+            border-radius: 50px;
+            border: 12px solid #1f2937;
             position: relative;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                0 0 80px rgba(245, 158, 11, 0.15);
             overflow: hidden;
             z-index: 10;
         }
 
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 150px; height: 30px;
+            background: #1f2937;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 20;
+        }
+
         .chat-screen {
             background: #0b141a;
+            background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%231f2937" fill-opacity="0.4" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Ccircle cx="13" cy="13" r="3"/%3E%3C/g%3E%3C/svg%3E');
             height: 100%;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            padding-top: 40px;
-            font-family: Arial, sans-serif;
+            padding-top: 60px;
         }
-        
+
         .chat-bubble {
-            max-width: 80%;
-            padding: 10px 15px;
+            max-width: 85%;
+            padding: 12px 16px;
             font-size: 0.9rem;
-            border-radius: 12px;
+            border-radius: 16px;
             position: relative;
             opacity: 0;
-            animation: popIn 0.5s forwards;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            line-height: 1.4;
         }
-        
+
         .bubble-bot {
             background: #1f2c34;
-            color: #fff;
+            color: #e9edef;
             align-self: flex-start;
-            border-top-left-radius: 0;
+            border-top-left-radius: 4px;
         }
-        
+
         .bubble-user {
             background: #005c4b;
-            color: #fff;
+            color: #e9edef;
             align-self: flex-end;
-            border-top-right-radius: 0;
+            border-top-right-radius: 4px;
         }
 
         @keyframes popIn {
-            0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+            0% { opacity: 0; transform: translateY(15px) scale(0.9); }
             100% { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* --- Features Grid --- */
+        /* --- Features Section --- */
         .features {
-            padding: 5rem 5%;
-            background: #0d0d12;
+            padding: 6rem 5%;
+            position: relative;
         }
-        
+
         .section-header {
             text-align: center;
             margin-bottom: 4rem;
         }
-        .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
-        .section-header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+
+        .section-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
 
         .grid-3 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .feature-card {
-            background: var(--card-bg);
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
             padding: 2.5rem;
             border-radius: 24px;
             border: 1px solid var(--border-light);
-            transition: 0.3s;
+            transition: all 0.4s ease;
         }
+
         .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.2);
+            transform: translateY(-8px);
+            border-color: rgba(245, 158, 11, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
+
         .icon-box {
-            width: 50px;
-            height: 50px;
-            background: rgba(99, 102, 241, 0.1);
-            border-radius: 12px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.05));
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -254,13 +356,22 @@
             color: var(--primary);
             margin-bottom: 1.5rem;
         }
-        .feature-card h3 { margin-bottom: 1rem; font-size: 1.3rem; }
-        .feature-card p { color: var(--text-muted); font-size: 0.95rem; }
 
-        /* --- Pricing --- */
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* --- Pricing Section --- */
         .pricing {
-            padding: 5rem 5%;
-            position: relative;
+            padding: 6rem 5%;
+            background: rgba(0,0,0,0.3);
         }
 
         .pricing-grid {
@@ -269,186 +380,321 @@
             gap: 2rem;
             max-width: 1200px;
             margin: 0 auto;
+            align-items: center;
         }
 
         .plan-card {
-            background: var(--card-bg);
+            background: var(--bg-card);
             border: 1px solid var(--border-light);
             border-radius: 24px;
-            padding: 3rem;
+            padding: 3rem 2rem;
             position: relative;
-            display: flex;
-            flex-direction: column;
+            transition: all 0.3s;
         }
 
         .plan-card.highlight {
             border-color: var(--primary);
-            background: linear-gradient(180deg, rgba(99, 102, 241, 0.1) 0%, var(--card-bg) 50%);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-card) 100%);
+            transform: scale(1.05);
+            box-shadow: 0 20px 50px rgba(245, 158, 11, 0.1);
         }
-        
+
         .popular-tag {
             position: absolute;
-            top: -12px;
+            top: -14px;
             left: 50%;
             transform: translateX(-50%);
-            background: var(--primary);
-            padding: 4px 12px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #000;
+            padding: 6px 16px;
             border-radius: 20px;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px var(--primary-glow);
         }
 
-        .price { font-size: 3rem; font-weight: 800; margin: 1.5rem 0 0.5rem; }
-        .price span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
-        
+        .plan-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 1.5rem 0 1rem;
+            color: #fff;
+        }
+
+        .price span {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
         .plan-features {
             list-style: none;
-            margin: 2rem 0;
-            flex-grow: 1;
+            margin: 2.5rem 0;
         }
+
         .plan-features li {
-            margin-bottom: 1rem;
+            margin-bottom: 1.2rem;
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
-            color: var(--text-muted);
+            color: var(--text-main);
             font-size: 0.95rem;
         }
-        .plan-features li i { color: var(--primary); }
 
-        .btn-outline {
+        .plan-features li i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .plan-features li.disabled {
+            color: var(--text-muted);
+        }
+        .plan-features li.disabled i {
+            color: #374151;
+        }
+
+        /* --- Carousel Section --- */
+        .carousel-section {
+            padding: 6rem 5%;
+            background: linear-gradient(to right, rgba(245, 158, 11, 0.05), transparent, rgba(245, 158, 11, 0.05));
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-track-container {
             width: 100%;
-            padding: 1rem;
-            border-radius: 12px;
+            max-width: 1200px;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            gap: 2rem;
+        }
+
+        .carousel-slide {
+            min-width: calc(100% / 3 - 1.4rem);
+            background: var(--bg-card);
             border: 1px solid var(--border-light);
-            background: transparent;
-            color: #fff;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            backdrop-filter: blur(10px);
         }
-        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: #fff; }
 
-        .btn-primary-block {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 12px;
+        .carousel-slide .stars {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .carousel-slide p {
+            color: var(--text-main);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .carousel-slide .author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .author-avatar {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .author-info h4 { font-size: 0.95rem; }
+        .author-info span { font-size: 0.8rem; color: var(--text-muted); }
+
+        .carousel-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 2rem;
+        }
+
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
             border: none;
-            background: var(--primary);
-            color: #fff;
             cursor: pointer;
-            font-weight: 600;
             transition: 0.3s;
         }
-        .btn-primary-block:hover { background: #5558e6; }
+
+        .carousel-dot.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+
+        @media (max-width: 900px) {
+            .carousel-slide { min-width: calc(100% / 2 - 1rem); }
+        }
+        @media (max-width: 600px) {
+            .carousel-slide { min-width: 100%; }
+        }
 
         /* --- Footer --- */
         footer {
             padding: 4rem 5% 2rem;
-            background: #050508;
             border-top: 1px solid var(--border-light);
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.9rem;
         }
 
         /* --- Modal Signup --- */
         .modal {
             display: none;
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
             z-index: 2000;
-            backdrop-filter: blur(5px);
-            align-items: center; justify-content: center;
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
-        
-        .modal.active { display: flex; }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
 
         .modal-content {
-            background: #171721;
-            padding: 2.5rem;
+            background: #111827;
+            padding: 3rem;
             border-radius: 24px;
             width: 100%;
-            max-width: 500px;
-            border: 1px solid var(--border-light);
+            max-width: 480px;
+            border: 1px solid rgba(255,255,255,0.1);
             position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
         }
 
         .close-modal {
             position: absolute;
-            top: 20px; right: 20px;
+            top: 20px; right: 24px;
             background: none; border: none;
             color: var(--text-muted);
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
-        }
-
-        .form-group { margin-bottom: 1.2rem; text-align: left; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.8rem 1rem;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            color: #fff;
-            font-family: inherit;
+            transition: color 0.3s;
         }
         
+        .close-modal:hover { color: #fff; }
+
+        .form-group { margin-bottom: 1.5rem; text-align: left; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
         .trial-badge {
             background: rgba(16, 185, 129, 0.1);
             color: #34d399;
-            padding: 8px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 12px;
             text-align: center;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            font-weight: 500;
             border: 1px solid rgba(16, 185, 129, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         /* --- Responsive --- */
-        @media (max-width: 768px) {
-            .hero { flex-direction: column; text-align: center; padding-top: 120px; }
-            .hero-content { margin-bottom: 3rem; }
-            h1 { font-size: 3rem; }
-            .chat-screen { width: 100%; }
+        @media (max-width: 900px) {
+            .hero { flex-direction: column; text-align: center; padding-top: 130px; gap: 3rem; }
+            .hero-content { margin: 0 auto; }
+            .hero-buttons { justify-content: center; }
+            .hero-visual { justify-content: center; width: 100%; }
+            h1 { font-size: 3.5rem; }
+            .nav-links { display: none; } /* En móvil simplificamos el navbar */
+            .plan-card.highlight { transform: none; }
+        }
+        @media (max-width: 480px) {
+            h1 { font-size: 2.8rem; }
+            .hero-buttons { flex-direction: column; }
+            .hero-buttons .btn-cta, .hero-buttons .btn-outline { width: 100%; }
+            .modal-content { padding: 2rem; }
         }
     </style>
 </head>
 <body>
+    <div class="bg-glow"></div>
+    <div class="grid-pattern"></div>
 
     <!-- Nav -->
     <nav>
-        <div class="logo"><i class="fa-solid fa-robot"></i> TechBot</div>
+        <a href="/" class="logo">
+            <i class="fa-solid fa-robot" style="color: var(--primary);"></i> 
+            Bot<span>SaaS</span>
+        </a>
         <div class="nav-links">
             <a href="#features">Características</a>
-            <a href="#pricing">Precios</a>
+            <a href="#pricing">Planes</a>
+            <a href="/auth/login" class="btn-login">Iniciar Sesión</a>
+            <button class="btn-cta" onclick="openSignup('pro')">Prueba Gratis</button>
         </div>
-        <button class="btn-cta" onclick="openSignup('pro')">Prueba Gratis</button>
     </nav>
 
     <!-- Hero -->
     <section class="hero">
         <div class="hero-content">
-            <div class="badge-new"><i class="fa-solid fa-bolt"></i> Nuevo motor IA 2.0</div>
+            <div class="badge"><i class="fa-solid fa-bolt"></i> Impulsado por Inteligencia Artificial</div>
             <h1>Tu Negocio en <br><span>Autopiloto Total</span></h1>
-            <p class="hero-desc">Deja que nuestro Bot inteligente gestione citas, responda clientes y cierre ventas por WhatsApp. Configúralo en minutos.</p>
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn-cta" onclick="openSignup('pro')" style="padding: 1rem 2rem;">Comenzar Ahora</button>
-                <button class="btn-outline" style="width: auto; padding: 1rem 2rem;">Ver Demo</button>
-            </div>
-            
-            <div style="margin-top: 2rem; display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem;">
-                <i class="fa-solid fa-check" style="color: var(--primary);"></i> 3 días de prueba PRO incluidos
+            <p class="hero-desc">Convierte conversaciones en clientes. Un asistente virtual premium que atiende, agenda y vende por WhatsApp 24/7.</p>
+            <div class="hero-buttons">
+                <button class="btn-cta" onclick="openSignup('pro')" style="padding: 1.2rem 2.5rem; font-size: 1.1rem;">Empezar 7 Días Gratis</button>
+                <a href="#features" class="btn-outline">Descubrir más</a>
             </div>
         </div>
 
         <div class="hero-visual">
             <div class="phone-mockup">
                 <div class="chat-screen" id="chatDemo">
-                    <!-- JS will animate this -->
+                    <!-- Animado por JS -->
                 </div>
             </div>
         </div>
@@ -457,142 +703,211 @@
     <!-- Features -->
     <section id="features" class="features">
         <div class="section-header">
-            <h2>Todo lo que necesitas</h2>
-            <p>Más que un chatbot, una plataforma completa de gestión para profesionales.</p>
+            <h2>Diseñado para Escalar</h2>
+            <p>La herramienta definitiva para clínicas, spas y profesionales que valoran su tiempo y la experiencia de sus clientes.</p>
         </div>
 
         <div class="grid-3">
             <div class="feature-card">
                 <div class="icon-box"><i class="fa-brands fa-whatsapp"></i></div>
-                <h3>WhatsApp Automatizado</h3>
-                <p>Respuestas inmediatas 24/7. Tu negocio nunca duerme, tu bot tampoco.</p>
+                <h3>Atención Inmediata</h3>
+                <p>Respuestas personalizadas en segundos. Tus clientes nunca se sentirán ignorados, mejorando la retención.</p>
             </div>
             <div class="feature-card">
                 <div class="icon-box"><i class="fa-solid fa-calendar-check"></i></div>
-                <h3>Agendamiento Inteligente</h3>
-                <p>Sincronización con Google Calendar. Evita citas duplicadas automáticamente.</p>
+                <h3>Agendamiento Autónomo</h3>
+                <p>El bot revisa tu disponibilidad real, agenda la cita y envía recordatorios automáticos (24h y 1h antes).</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
+                <h3>IA Conversacional</h3>
+                <p>Entiende el contexto. No es un simple menú numérico; es Claude AI entrenado con tu catálogo de servicios.</p>
             </div>
             <div class="feature-card">
                 <div class="icon-box"><i class="fa-solid fa-chart-line"></i></div>
-                <h3>Dashboard Financiero</h3>
-                <p>Visualiza tus ingresos, citas completadas y proyecciones futuras en tiempo real.</p>
+                <h3>Métricas en Tiempo Real</h3>
+                <p>Dashboard premium para medir ingresos, citas canceladas, conversiones y crecimiento mensual.</p>
             </div>
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-solid fa-bullhorn"></i></div>
+                <h3>Marketing Proactivo</h3>
+                <p>El sistema detecta días flojos y sugiere campañas automáticas para recuperar clientes inactivos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3>Multi-Pagos Seguros</h3>
+                <p>Envía links de pago de Stripe o MercadoPago directo en el chat para asegurar reservaciones.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Carousel / Testimonials -->
+    <section class="carousel-section">
+        <div class="section-header" style="margin-bottom: 3rem;">
+            <h2>Casos de Éxito</h2>
+            <p>Descubre cómo profesionales como tú están multiplicando sus ingresos mientras trabajan menos.</p>
+        </div>
+
+        <div class="carousel-track-container">
+            <div class="carousel-track" id="carouselTrack">
+                <!-- Slide 1 -->
+                <div class="carousel-slide">
+                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p>"Antes perdía horas respondiendo mensajes. Ahora el bot agenda todo automático mientras atiendo pacientes. Mis citas aumentaron un 40% el primer mes."</p>
+                    <div class="author">
+                        <div class="author-avatar">CD</div>
+                        <div class="author-info">
+                            <h4>Dra. Mariana López</h4>
+                            <span>Clínica Dental Avanzada</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="carousel-slide">
+                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p>"La mejor inversión del año. El bot no solo agenda, sino que manda el recordatorio 24hrs antes y me redujo las inasistencias casi a cero."</p>
+                    <div class="author">
+                        <div class="author-avatar">SB</div>
+                        <div class="author-info">
+                            <h4>Carlos Herrera</h4>
+                            <span>Studio Barbershop Premium</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="carousel-slide">
+                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p>"Me costaba mucho cobrar anticipos. Ahora el bot manda el link de Stripe por WhatsApp y la cita no se bloquea hasta que pagan. Es magia."</p>
+                    <div class="author">
+                        <div class="author-avatar">SE</div>
+                        <div class="author-info">
+                            <h4>Elena Gómez</h4>
+                            <span>Spa & Estética Renacer</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="carousel-slide">
+                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p>"El dashboard financiero me dio la claridad que necesitaba. Ver mi MRR y proyección de citas semanales me ayuda a saber cuándo invertir en Ads."</p>
+                    <div class="author">
+                        <div class="author-avatar">CM</div>
+                        <div class="author-info">
+                            <h4>Dr. Arturo Rojas</h4>
+                            <span>Consultorio Médico Especializado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-nav" id="carouselNav">
+            <!-- Puntos generados por JS -->
         </div>
     </section>
 
     <!-- Pricing -->
     <section id="pricing" class="pricing">
         <div class="section-header">
-            <h2>Planes Flexibles</h2>
-            <p>Comienza con nuestra prueba de 3 días. Cancela cuando quieras.</p>
+            <h2>Invierte en Crecimiento</h2>
+            <p>Planes adaptados al tamaño y ambición de tu negocio. Sin contratos forzosos.</p>
         </div>
 
         <div class="pricing-grid">
-            <!-- Basic -->
-            <div class="plan-card">
-                <h3>Básico</h3>
-                <div class="price">$29<span>/mes</span></div>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Para emprendedores que inician.</p>
-                <ul class="plan-features">
-                    <li><i class="fa-solid fa-check"></i> Respuestas Automáticas</li>
-                    <li><i class="fa-solid fa-check"></i> Agendamiento simple</li>
-                    <li><i class="fa-solid fa-times" style="color: #444;"></i> Dashboard Avanzado</li>
-                    <li><i class="fa-solid fa-times" style="color: #444;"></i> Número Dedicado</li>
-                </ul>
-                <button class="btn-outline" onclick="openSignup('basic')">Elegir Básico</button>
-            </div>
-
             <!-- Pro -->
-            <div class="plan-card highlight">
-                <div class="popular-tag">Más Popular</div>
+            <div class="plan-card">
                 <h3>Pro</h3>
-                <div class="price">$49<span>/mes</span></div>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Automatización total y control.</p>
+                <div class="price">$1,499<span>/mes MXN</span></div>
+                <p style="color: var(--text-muted);">Automatización esencial y agendamiento perfecto.</p>
                 <ul class="plan-features">
-                    <li><i class="fa-solid fa-check"></i> <strong>Número Propio Dedicado</strong></li>
-                    <li><i class="fa-solid fa-check"></i> Dashboard Financiero</li>
-                    <li><i class="fa-solid fa-check"></i> Calendar Sync Bidireccional</li>
-                    <li><i class="fa-solid fa-check"></i> Recordatorios Automáticos</li>
+                    <li><i class="fa-solid fa-check"></i> Bot de flujo guiado avanzado</li>
+                    <li><i class="fa-solid fa-check"></i> Agendamiento vía WhatsApp</li>
+                    <li><i class="fa-solid fa-check"></i> Integración Google Calendar</li>
+                    <li><i class="fa-solid fa-check"></i> Recordatorios 24h y 1h</li>
+                    <li class="disabled"><i class="fa-solid fa-times"></i> IA Autónoma Conversacional</li>
+                    <li class="disabled"><i class="fa-solid fa-times"></i> Marketing Proactivo</li>
                 </ul>
-                <button class="btn-primary-block" onclick="openSignup('pro')">Prueba 3 Días Gratis</button>
+                <button class="btn-outline" style="width: 100%;" onclick="openSignup('pro')">Elegir Pro</button>
             </div>
 
             <!-- Ultra -->
-            <div class="plan-card">
+            <div class="plan-card highlight">
+                <div class="popular-tag">La Mejor Opción</div>
                 <h3>Ultra IA</h3>
-                <div class="price">$99<span>/mes</span></div>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Poder de Marketing e IA.</p>
+                <div class="price">$3,499<span>/mes MXN</span></div>
+                <p style="color: var(--text-muted);">Un verdadero asistente virtual que piensa por ti.</p>
                 <ul class="plan-features">
-                    <li><i class="fa-solid fa-check"></i> Todo lo de Pro</li>
-                    <li><i class="fa-solid fa-check"></i> <strong>IA Conversacional Avanzada</strong></li>
-                    <li><i class="fa-solid fa-check"></i> Campañas de Reactivación</li>
-                    <li><i class="fa-solid fa-check"></i> Soporte Prioritario 24/7</li>
+                    <li><i class="fa-solid fa-check"></i> <strong>Todo lo del plan Pro</strong></li>
+                    <li><i class="fa-solid fa-check"></i> IA Claude personalizada</li>
+                    <li><i class="fa-solid fa-check"></i> Modo "Bot del Dueño"</li>
+                    <li><i class="fa-solid fa-check"></i> Analítica predictiva avanzada</li>
+                    <li><i class="fa-solid fa-check"></i> Campañas automáticas</li>
+                    <li><i class="fa-solid fa-check"></i> Soporte VIP</li>
                 </ul>
-                <button class="btn-outline" onclick="openSignup('ultra')">Contactar Ventas</button>
+                <button class="btn-cta" style="width: 100%; padding: 1rem;" onclick="openSignup('ultra')">Inicia tu Trial</button>
             </div>
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2024 TechBot SaaS. Todos los derechos reservados.</p>
+        <p>&copy; 2026 BotSaaS. Desarrollado para escalar negocios.</p>
     </footer>
 
     <!-- Signup Modal -->
     <div class="modal" id="signupModal">
         <div class="modal-content">
             <button class="close-modal" onclick="closeSignup()">&times;</button>
-            <h2 style="margin-bottom: 1rem;">Crea tu cuenta</h2>
+            <h2 style="margin-bottom: 0.5rem;">Comienza tu evolución</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Crea tu cuenta en menos de 1 minuto.</p>
             
             <div class="trial-badge">
-                <i class="fa-solid fa-gift"></i> Incluye 3 días PRO gratis
+                <i class="fa-solid fa-unlock-keyhole"></i> 7 Días de acceso completo, sin tarjeta.
             </div>
 
             <form action="/signup" method="POST">
-                <input type="hidden" id="selectedPlan" name="plan" value="pro">
+                <input type="hidden" id="selectedPlan" name="plan" value="ultra">
                 
                 <div class="form-group">
                     <label>Nombre del Negocio</label>
-                    <input type="text" name="businessName" placeholder="Ej. Clínica Dental Sonrisas" required>
+                    <input type="text" name="businessName" placeholder="Ej. Odontología Avanzada" required>
                 </div>
                 
                 <div class="form-group">
-                    <label>Tipo de Negocio</label>
+                    <label>Sector</label>
                     <select name="businessType" required>
-                        <option value="dental">Consultorio Dental</option>
-                        <option value="medical">Clínica Médica</option>
+                        <option value="dental">Clínica Dental</option>
+                        <option value="medical">Consultorio Médico</option>
                         <option value="spa">Spa / Estética</option>
-                        <option value="barbershop">Barbería</option>
-                        <option value="other">Otro</option>
+                        <option value="barbershop">Barbería Premium</option>
+                        <option value="other">Otro Servicio</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>WhatsApp (Donde te contactarán)</label>
-                    <input type="tel" name="whatsapp" placeholder="+52 1 55..." required>
+                    <label>Email Profesional</label>
+                    <input type="email" name="email" placeholder="contacto@tunegocio.com" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" name="email" placeholder="tu@email.com" required>
+                    <label>Crea una Contraseña</label>
+                    <input type="password" name="password" placeholder="Mínimo 8 caracteres" required>
                 </div>
 
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" name="password" placeholder="********" required>
-                </div>
-
-                <button type="submit" class="btn-cta" style="width: 100%; border-radius: 12px; margin-top: 1rem;">Crear mi Bot</button>
+                <button type="submit" class="btn-cta" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; margin-top: 1rem;">Crear mi Asistente</button>
             </form>
+            
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                ¿Ya tienes cuenta? <a href="/auth/login" style="color: var(--primary); text-decoration: none;">Inicia sesión</a>
+            </p>
         </div>
     </div>
 
     <script>
-        // Chat Animation
+        // Animación dinámica del Chat
         const messages = [
-            { text: "Hola, quisiera agendar una cita", type: "user", delay: 1000 },
-            { text: "¡Hola! Claro que sí 👋 Soy el asistente virtual de TechBot. ¿Para qué día te gustaría?", type: "bot", delay: 2500 },
-            { text: "Para este jueves por la tarde", type: "user", delay: 4500 },
-            { text: "Perfecto. Tengo disponible a las 4:00 PM y 5:30 PM. ¿Cuál prefieres?", type: "bot", delay: 6000 }
+            { text: "Hola, quisiera información sobre el blanqueamiento láser.", type: "user", delay: 1000 },
+            { text: "¡Hola! 👋 Claro que sí. El blanqueamiento láser dura 45 mins y cuesta $1,500 MXN. ¿Te gustaría ver disponibilidad?", type: "bot", delay: 2500 },
+            { text: "Sí por favor, para mañana en la tarde", type: "user", delay: 4500 },
+            { text: "Para mañana martes tengo un espacio a las 4:30 PM y otro a las 6:00 PM. ¿Te reservo alguno? 🗓️", type: "bot", delay: 6000 }
         ];
 
         const chatContainer = document.getElementById('chatDemo');
@@ -608,15 +923,14 @@
                     div.className = `chat-bubble bubble-${msg.type}`;
                     div.innerText = msg.text;
                     chatContainer.appendChild(div);
-                }, currentTime); // Use running total
+                }, currentTime);
             });
         }
         
-        // Loop animation
         playChat();
-        setInterval(playChat, 12000); // Reset every 12s
+        setInterval(playChat, 10000);
 
-        // Modal Logic
+        // Modal
         function openSignup(plan) {
             document.getElementById('selectedPlan').value = plan;
             document.getElementById('signupModal').classList.add('active');
@@ -625,9 +939,78 @@
             document.getElementById('signupModal').classList.remove('active');
         }
         
-        // Close on blur
         document.getElementById('signupModal').addEventListener('click', (e) => {
             if(e.target === document.getElementById('signupModal')) closeSignup();
+        });
+
+        // Animación del Carrusel
+        const track = document.getElementById('carouselTrack');
+        const slides = Array.from(track.children);
+        const nav = document.getElementById('carouselNav');
+        let currentSlideIndex = 0;
+        let slideInterval;
+
+        function getSlidesVisible() {
+            if (window.innerWidth <= 600) return 1;
+            if (window.innerWidth <= 900) return 2;
+            return 3;
+        }
+
+        function setupCarousel() {
+            nav.innerHTML = '';
+            const visible = getSlidesVisible();
+            const totalDots = Math.max(1, slides.length - visible + 1);
+
+            for(let i=0; i < totalDots; i++) {
+                const dot = document.createElement('button');
+                dot.classList.add('carousel-dot');
+                if(i === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => moveToSlide(i));
+                nav.appendChild(dot);
+            }
+            moveToSlide(0);
+        }
+
+        function moveToSlide(index) {
+            const visible = getSlidesVisible();
+            const maxIndex = Math.max(0, slides.length - visible);
+            if (index > maxIndex) index = 0;
+            
+            const slideWidth = slides[0].getBoundingClientRect().width;
+            const gap = parseFloat(window.getComputedStyle(track).gap) || 0;
+            
+            track.style.transform = `translateX(-${index * (slideWidth + gap)}px)`;
+            
+            Array.from(nav.children).forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+            currentSlideIndex = index;
+            resetInterval();
+        }
+
+        function autoPlay() {
+            currentSlideIndex++;
+            moveToSlide(currentSlideIndex);
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(autoPlay, 5000);
+        }
+
+        window.addEventListener('resize', setupCarousel);
+        setupCarousel();
+
+        // Efecto scroll navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.style.background = 'rgba(3, 7, 18, 0.95)';
+                nav.style.padding = '1rem 5%';
+            } else {
+                nav.style.background = 'rgba(3, 7, 18, 0.8)';
+                nav.style.padding = '1.2rem 5%';
+            }
         });
     </script>
 </body>

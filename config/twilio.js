@@ -10,15 +10,25 @@ function getTwilioClient(business) {
   return twilio(business.whatsapp.twilioSid, business.whatsapp.twilioToken);
 }
 
-async function sendWhatsApp(business, to, message) {
+async function sendWhatsApp(business, to, message, templateOpts = null) {
   try {
     const client = getTwilioClient(business);
 
-    const result = await client.messages.create({
-      body: message,
+    let messagePayload = {
       from: `whatsapp:${business.whatsapp?.number || process.env.TWILIO_WHATSAPP_NUMBER || '+14155238886'}`,
       to: to.startsWith('whatsapp:') ? to : `whatsapp:${to}`
-    });
+    };
+
+    if (templateOpts && templateOpts.contentSid) {
+      messagePayload.contentSid = templateOpts.contentSid;
+      if (templateOpts.contentVariables) {
+        messagePayload.contentVariables = templateOpts.contentVariables;
+      }
+    } else {
+      messagePayload.body = message;
+    }
+
+    const result = await client.messages.create(messagePayload);
 
     console.log('✅ WhatsApp enviado:', result.sid);
     return result;

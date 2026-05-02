@@ -150,8 +150,7 @@ userSchema.virtual('hasActiveSubscription').get(function () {
         this.subscription.endDate > new Date();
 });
 
-// INDEX para búsquedas rápidas
-userSchema.index({ email: 1 });
+// INDEX para búsquedas rápidas (email ya indexado por unique:true)
 userSchema.index({ businessId: 1 });
 userSchema.index({ 'subscription.status': 1 });
 

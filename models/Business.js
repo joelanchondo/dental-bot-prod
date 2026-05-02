@@ -23,6 +23,10 @@ const businessSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  logoUrl: {
+    type: String, // Ruta al logo de la empresa
+    default: ''
+  },
   legalName: String,
   rfc: String,
   managerName: String,
@@ -51,6 +55,15 @@ const businessSchema = new mongoose.Schema({
     postalCode: String,
     country: { type: String, default: 'México' }
   },
+
+  // 🎯 SUCURSALES / DOCTORES (Capa 2 para Plan Ultra)
+  locations: [{
+    name: { type: String, required: true }, // Ej: "Sucursal Norte" o "Dr. Juan Pérez"
+    address: String,
+    phone: String,
+    active: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
 
   // 🎯 SERVICIOS - ARQUITECTURA PREMIUM SAAS
   services: [{
@@ -101,8 +114,9 @@ const businessSchema = new mongoose.Schema({
   // PLAN Y ESTADO
   plan: {
     type: String,
-    enum: ['demo', 'basic', 'pro', 'ultra'],
-    default: 'demo'
+    // ✅ FIX: Unificado con User.subscription.plan y webhook.js
+    enum: ['demo', 'trial', 'basico', 'pro', 'ultra'],
+    default: 'trial'
   },
   subscriptionStatus: {
     type: String,

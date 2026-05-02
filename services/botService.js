@@ -85,23 +85,25 @@ async function processBotMessage(business, message, phone) {
     // Si el mensaje es un número, es selección de servicio
     const number = parseInt(msg);
     if (!isNaN(number) && number > 0) {
-      ConversationManager.updateState(phone, {
-        flow: 'select_service',
-        step: 'service_selected',
-        data: { serviceIndex: number }
-      });
-      
       const selectedService = getServiceByIndex(updatedBusiness, number);
       if (!selectedService) {
         return '❌ Número inválido. Por favor, elige un número de la lista.\n\n' + 
                generateServiceMenu(updatedBusiness);
       }
       
-      return `✅ *${selectedService.name}*\n\n` +
-             `💰 Precio: $${selectedService.price}\n` +
+      ConversationManager.updateState(phone, {
+        flow: 'select_service',
+        step: 'confirm_service',
+        data: { selectedService }
+      });
+      
+      const priceDisplay = selectedService.price > 0 ? `💰 Precio: ${selectedService.price}\n` : (selectedService.basePrice > 0 ? `💰 Desde: ${selectedService.basePrice}\n` : '');
+      
+      return `✅ Has seleccionado: *${selectedService.name}*\n\n` +
+             priceDisplay +
              (selectedService.duration ? `⏱️ Duración: ${selectedService.duration} min\n` : '') +
              (selectedService.description ? `📝 ${selectedService.description}\n\n` : '\n') +
-             '¿Deseas agendar este servicio? (Responde "sí" o "no")';
+             '👉 ¿Deseas continuar y agendar este servicio?\nResponde *"sí"* o *"no"*';
     }
 
     // Por defecto, mostrar menú dinámico
@@ -133,11 +135,13 @@ async function handleServiceSelection(business, msg, phone, state) {
         data: { ...state.data, selectedService }
       });
       
-      return `✅ *${selectedService.name}*\n\n` +
-             `💰 Precio: $${selectedService.price}\n` +
+      const priceDisplay = selectedService.price > 0 ? `💰 Precio: ${selectedService.price}\n` : (selectedService.basePrice > 0 ? `💰 Desde: ${selectedService.basePrice}\n` : '');
+      
+      return `✅ Has seleccionado: *${selectedService.name}*\n\n` +
+             priceDisplay +
              (selectedService.duration ? `⏱️ Duración: ${selectedService.duration} min\n` : '') +
              (selectedService.description ? `📝 ${selectedService.description}\n\n` : '\n') +
-             '¿Deseas agendar este servicio? (Responde "sí" o "no")';
+             '👉 ¿Deseas continuar y agendar este servicio?\nResponde *"sí"* o *"no"*';
 
     case 'confirm_service':
       if (msg.includes('sí') || msg.includes('si') || msg.includes('yes')) {

@@ -1,11 +1,18 @@
-require('dotenv').config();
+require('dotenv').config({ path: `${__dirname}/.env.${process.env.NODE_ENV || 'development'}` });
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const { authenticateToken, requireRole } = require('./middleware/auth');
 
 const app = express();
 app.set("trust proxy", 1);
+
+// ✅ Motor de vistas EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // 🔒 RATE LIMITING GLOBAL PARA PROTECCIÓN
 const globalLimiter = rateLimit({
@@ -25,6 +32,7 @@ app.use(globalLimiter);
 
 // Middleware
 app.use(cors());
+app.use(cookieParser()); // ✅ FIX: Necesario para leer JWT desde cookies
 // Middleware para detectar subdominio
 app.use((req, res, next) => {
   const host = req.headers.host;
@@ -36,7 +44,7 @@ app.use((req, res, next) => {
     // Solo procesar si no es 'www' o 'dental-bot-prod'
     if (!['www', 'dental-bot-prod', 'localhost'].includes(subdomain)) {
       req.subdomain = subdomain;
-      console.log('🌐 Subdominio detectado:', subdomain);
+      console.log('🚀 [ANTIGRAVITY] Subdominio detectado:', subdomain);
     }
   }
 
@@ -82,16 +90,21 @@ app.use('/onboarding-dashboard', onboardingDashboardRoutes);
 app.use("/onboarding-complete", require("./routes/onboarding-complete"));
 app.use("/api/onboarding-complete", require("./routes/onboarding-complete"));
 app.use("/onboarding-enhanced", require("./routes/onboarding-enhanced"));
-app.use("/dashboard-pro", require("./routes/dashboard-pro"));
+app.use("/dashboard-pro", require("./routes/dashboard-pro")); // ✅ FIX: Solo UNA vez
 
 // Otras rutas
 app.use('/webhook', webhookRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/dashboard', dashboardRoutes);
-app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 app.use('/calendar-dashboard', calendarDashboardRoutes);
-app.use("/dashboard-pro", require("./routes/dashboard-pro"));
 app.use('/api/appointments', require('./routes/appointments-api'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/auth', require('./routes/auth-pages')); // ✅ Páginas de login/registro
+
+
+// Silenciar 404 de favicon
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 
 // Health check
 app.get('/health', (req, res) => {
@@ -125,69 +138,13 @@ app.get('/', (req, res) => {
 });
 */
 
-// Ruta admin dashboard
-app.get('/admin', async (req, res) => {
+// Ruta admin dashboard — ✅ FIX: Protegida con JWT + rol superadmin
+app.get('/admin', authenticateToken, requireRole('superadmin'), async (req, res) => {
   try {
     const Business = require('./models/Business');
     const businesses = await Business.find().sort({ createdAt: -1 });
 
-    let businessList = '';
-    businesses.forEach(business => {
-      businessList += `
-        <div class="business-item">
-          <div>
-            <strong>${business.businessName}</strong><br>
-            <small>Plan: ${business.plan} | ${new Date(business.createdAt).toLocaleDateString('es-MX')}</small>
-          </div>
-          <div>
-            <a href="/dashboard/${business._id}" target="_blank" class="btn btn-view">Ver</a>
-            <button class="btn btn-delete" onclick="deleteBusiness('${business._id}')">Eliminar</button>
-          </div>
-        </div>`;
-    });
-
-    res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .header { background: #dc2626; color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
-        .business-list { background: white; padding: 20px; border-radius: 8px; }
-        .business-item { padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin: 2px; }
-        .btn-delete { background: #dc2626; color: white; }
-        .btn-view { background: #2563eb; color: white; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>⚙️ Admin Dashboard</h1>
-        <p>Gestión de Clientes</p>
-    </div>
-
-    <div class="business-list">
-        <h2>📋 Clientes (${businesses.length})</h2>
-        ${businessList}
-    </div>
-
-    <script>
-        function deleteBusiness(businessId) {
-            if (confirm('¿Eliminar este cliente?')) {
-                fetch('/api/admin/businesses/' + businessId, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Cliente eliminado');
-                        location.reload();
-                    }
-                });
-            }
-        }
-    </script>
-</body>
-</html>
-    `);
+    res.render('dashboard-admin-saas', { businesses });
   } catch (error) {
     res.status(500).send('Error: ' + error.message);
   }

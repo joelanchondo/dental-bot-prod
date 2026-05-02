@@ -57,8 +57,8 @@ async function checkAndSendReminders() {
         // Buscar citas para recordatorio de 24 horas
         await processReminders('24h', 24);
 
-        // Buscar citas para recordatorio de 1 hora
-        await processReminders('1h', 1);
+        // Buscar citas para recordatorio de 30 minutos
+        await processReminders('30m', 0.5);
 
     } catch (error) {
         console.error('❌ Error en verificación de recordatorios:', error);
@@ -156,7 +156,7 @@ async function sendReminder(appointment, reminderType) {
                 `📍 ${business.address || ''}\n\n` +
                 `¿Necesitas reagendar? Responde a este mensaje.`;
         } else {
-            message = `⏰ *Tu cita es en 1 hora*\n\n` +
+            message = `⏰ *Tu cita es en 30 minutos*\n\n` +
                 `Hola ${appointment.clientName || ''},\n\n` +
                 `Te esperamos en ${business.businessName} a las *${formattedTime}*.\n\n` +
                 `💇 *Servicio:* ${appointment.service || ''}\n` +
@@ -240,9 +240,9 @@ async function getReminderStats(businessId = null) {
         const stats = {
             totalToday: appointments.length,
             reminders24hSent: appointments.filter(a => a.reminders?.['24h']).length,
-            reminders1hSent: appointments.filter(a => a.reminders?.['1h']).length,
+            reminders30mSent: appointments.filter(a => a.reminders?.['30m']).length,
             pending24h: appointments.filter(a => !a.reminders?.['24h']).length,
-            pending1h: appointments.filter(a => !a.reminders?.['1h']).length
+            pending30m: appointments.filter(a => !a.reminders?.['30m']).length
         };
 
         return stats;

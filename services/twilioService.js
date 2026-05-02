@@ -23,7 +23,7 @@ class TwilioService {
         minute: '2-digit'
       });
 
-      // Mensaje de confirmación
+      // Mensaje de confirmación (Fallback para cuando la ventana 24h esté abierta)
       const message = `✅ *Cita Confirmada*\n\n` +
         `Hola ${appointment.clientName},\n\n` +
         `Tu cita ha sido agendada:\n\n` +
@@ -34,9 +34,17 @@ class TwilioService {
         `📞 *Teléfono:* ${business.whatsappBusiness}\n\n` +
         ``;
 
-      // Enviar mensaje usando la función de config/twilio.js
-      // appointment.clientPhone YA ESTÁ FORMATEADO correctamente
-      await sendWhatsApp(business, appointment.clientPhone, message);
+      // Variables para la plantilla Content API de Twilio (Fuera de 24h)
+      const templateOpts = {
+          contentSid: 'HXb5b62575e6e4ff6129ad7c8efe1f983e',
+          contentVariables: JSON.stringify({
+              "1": `${appointmentDate.getDate()}/${appointmentDate.getMonth() + 1}`,
+              "2": appointmentDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '')
+          })
+      };
+
+      // Enviar mensaje usando la función de config/twilio.js con soporte a plantillas
+      await sendWhatsApp(business, appointment.clientPhone, message, templateOpts);
 
       console.log(`📱 WhatsApp enviado a ${appointment.clientPhone}`);
       
